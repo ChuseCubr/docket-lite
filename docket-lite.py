@@ -11,10 +11,12 @@ today = datetime.today().isoweekday()
 def parse_csv():
     raw_sched = []
     with open("schedule.csv") as reader:
+        print("Opening and reading schedule spreadsheet...")
         lines = reader.readlines()
         for line in lines:
             raw_sched += [line.replace("\n", "").split(",")]
     raw_sched.pop(0)
+    print("Schedule parsed")
     return raw_sched
 
 class Subject:
@@ -34,6 +36,7 @@ class Schedule:
         self.update_day()
     
     def _init_week(self, raw_sched):
+        print("Converting schedule to object...")
         # convert raw sched table to table of objects
         for raw_row in raw_sched:
             row = []
@@ -42,20 +45,25 @@ class Schedule:
                 row += [Subject(raw_row[col], start, end)]
                 self.time_bounds += start, end
             self.week += [row]
+        print("Week schedule created")
 
+        print("Gathering time bounds...")
         # quick and dirty unique filtering for time bounds
         filter = dict()
         for key in self.time_bounds:
             filter[key] = 0
         self.time_bounds = list(filter.keys())
+        print("Time bounds gathered")
 
 
     def update_day(self):
+        print("Updating today's schedule...")
         # get today's subjects
         self.day = []
         for row in self.week:
             self.day += [row[today]]
 
+        print("Compressing...")
         # remove blanks
         col = 0
         while col < len(self.day):
@@ -73,7 +81,10 @@ class Schedule:
             else:
                 col += 1
 
+        print("Today's schedule updated")
+
     def update_status(self):
+        print("Updating subject statuses")
         now = datetime.today().strftime("%H:%M")
         for subj in self.day:
             if now < subj.start:
@@ -86,15 +97,16 @@ class Schedule:
 # TODO: Extract settings for generating conky.text
 
 def read_conky():
+    print("Reading conky config...")
     lines = []
     with open("conky-docket.conf") as reader:
         lines = reader.readlines()
 
+    print("Parsing settings (fonts)...")
     settings = {
             "l_font": "",
             "t_font": ""
             }
-
     for line in lines:
         if ((not settings["l_font"] == []) 
                 and (not settings["t_font"] == [])):
@@ -104,13 +116,15 @@ def read_conky():
             if buffer == None:
                 settings["l_font"] = ""
             else:
+                print("Label font: " + buffer.group())
                 settings["l_font"] = buffer.group()
-        if settings["u_font"] == None:
+        if settings["t_font"] == None:
             buffer = re.search('^\s*u_font\s*=\s*"(.*)",\n', line)
             if buffer == None:
-                settings["u_font"] = ""
+                settings["t_font"] = ""
             else:
-                settings["u_font"] = buffer.group()
+                print("Time font: " + buffer.group())
+                settings["t_font"] = buffer.group()
 
     return lines, settings
 
@@ -121,6 +135,7 @@ def read_conky():
 # ${colorN}${font name:size=size}Subj.start-Subj.end
 
 def create_conky_text(sched, settings):
+    print("Generating conky.text...")
     conky_text = []
     for subj in sched:
         conky_text += ["${{color{status}}}${{font {font}}}{name}\n".format(
@@ -134,11 +149,13 @@ def create_conky_text(sched, settings):
                 end = subj.end)]
         conky_text += ["\n"]
 
+    print("conky.text generated")
     return conky_text
 
 # TODO: "server" to keep checking time (with goodbye message hehe)
 
 def write_conky(lines, new_lines):
+    print("Writing to conky config...")
     idx = lines.index("conky.text = [[\n") + 1
     # replace overlap
     while (idx < len(lines) and
@@ -155,6 +172,8 @@ def write_conky(lines, new_lines):
     
     with open("conky-docket.conf", "w") as writer:
         writer.writelines(lines)
+
+    print("Conky config updated")
 
 raw_sched = parse_csv()
 sched = Schedule(raw_sched)
