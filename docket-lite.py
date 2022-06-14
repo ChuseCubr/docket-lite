@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import re
 from time import sleep
 from datetime import datetime
 
@@ -81,31 +82,51 @@ class Schedule:
             else:
                 subj.status = "1"
 
-    # TODO: Extract settings for generating conky.text
-    # TODO: make conky.text
-    # TODO: "server" to keep checking time (with goodbye message hehe)
+# TODO: Extract settings for generating conky.text
 
-# conky.text format:
-# ${colorN}{font name:size=size}Subj.name
-# ${colorN}{font name:size=size}Subj.start-Subj.end
-# ${font name:size=size} spacer
-
-def update_conky(data):
+def read_conky():
     lines = []
     with open("conky-docket.conf") as reader:
         lines = reader.readlines()
 
+    settings = {
+            "l_font": None,
+            "t_font": None
+            }
+
+    for line in lines:
+        if ((not settings["l_font"] == []) 
+                and (not settings["t_font"] == [])):
+            break
+        if settings["l_font"] == None:
+            buffer = re.search('^\s*l_font\s*=\s*"(.*)",\n', line)
+            if not buffer == None:
+                settings["l_font"] = buffer.group()
+        if settings["u_font"] == None:
+            buffer = re.search('^\s*u_font\s*=\s*"(.*)",\n', line)
+            if not buffer == None:
+                settings["u_font"] = buffer.group()
+
+# TODO: make conky.text
+
+# conky.text format:
+# ${colorN}{font name:size=size}Subj.name
+# ${colorN}{font name:size=size}Subj.start-Subj.end
+
+# TODO: "server" to keep checking time (with goodbye message hehe)
+
+def write_conky(lines, new_lines):
     idx = lines.index("conky.text = [[\n") + 1
     # replace overlap
     while (idx < len(lines) and
-            len(data) > 0):
-        lines[idx] = data.pop(0)
+            len(new_lines) > 0):
+        lines[idx] = new_lines.pop(0)
         idx += 1
     # delete old excess
     while len(lines) > idx:
         lines.pop()
     # append new excess
-    for item in data:
+    for item in new_lines:
         lines += [item]
     lines += ["]]"]
     
