@@ -19,7 +19,7 @@ class Subject:
         self.name  = name
         self.start = start
         self.stop  = end
-        self.status = "upcoming"
+        self.status = "0"
 
 class Schedule:
     def __init__(self, raw_sched):
@@ -75,18 +75,24 @@ class Schedule:
         now = datetime.today().strftime("%H:%M")
         for subj in self.day:
             if now < subj.start:
-                subj.status = "upcoming"
+                subj.status = "0"
             elif now > subj.end:
-                subj.status = "completed"
+                subj.status = "2"
             else:
-                subj.status = "ongoing"
+                subj.status = "1"
 
+    # TODO: Extract settings for generating conky.text
     # TODO: make conky.text
     # TODO: "server" to keep checking time (with goodbye message hehe)
 
+# conky.text format:
+# ${colorN}{font name:size=size}Subj.name
+# ${colorN}{font name:size=size}Subj.start-Subj.end
+# ${font name:size=size} spacer
+
 def update_conky(data):
     lines = []
-    with open("~/.conkyrc") as reader:
+    with open("conky-docket.conf") as reader:
         lines = reader.readlines()
 
     idx = lines.index("conky.text = [[\n") + 1
