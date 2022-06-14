@@ -71,7 +71,6 @@ class Schedule:
             else:
                 col += 1
 
-    # TODO: update status property of subjects in sched.day
     def update_status(self):
         now = datetime.today().strftime("%H:%M")
         for subj in self.day:
@@ -82,8 +81,30 @@ class Schedule:
             else:
                 subj.status = "ongoing"
 
-    # TODO: write .conkyrc
+    # TODO: make conky.text
     # TODO: "server" to keep checking time (with goodbye message hehe)
+
+def update_conky(data):
+    lines = []
+    with open("~/.conkyrc") as reader:
+        lines = reader.readlines()
+
+    idx = lines.index("conky.text = [[\n") + 1
+    # replace overlap
+    while (idx < len(lines) and
+            len(data) > 0):
+        lines[idx] = data.pop(0)
+        idx += 1
+    # delete old excess
+    while len(lines) > idx:
+        lines.pop()
+    # append new excess
+    for item in data:
+        lines += [item]
+    lines += ["]]"]
+    
+    with open("conky-docket.conf") as writer:
+        writer.writelines(lines)
 
 raw_sched = parse_csv()
 sched = Schedule(raw_sched)
