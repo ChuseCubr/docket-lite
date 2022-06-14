@@ -70,9 +70,17 @@ class Schedule:
                 self.day.pop(col+1)
             else:
                 col += 1
+
     # TODO: update status property of subjects in sched.day
     def update_status(self):
-        pass
+        now = datetime.today().strftime("%H:%M")
+        for subj in self.day:
+            if now < subj.start:
+                subj.status = "upcoming"
+            elif now > subj.end:
+                subj.status = "completed"
+            else:
+                subj.status = "ongoing"
 
     # TODO: write .conkyrc
     # TODO: "server" to keep checking time (with goodbye message hehe)
