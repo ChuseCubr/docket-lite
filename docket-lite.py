@@ -4,12 +4,51 @@ import re
 from time import sleep
 from datetime import datetime
 
-today = datetime.today().isoweekday()
+#  raw_sched = parse_csv()
+#  sched = Schedule(raw_sched)
+#  lines, settings = Conky.read_config()
+#  conky_text = Conky.create_text(sched.day, settings)
+#  Conky.update_config(lines, conky_text)
+
+def main():
+    try:
+        yesterday = (today_() + 1) % 7
+        schedule = Schedule(parse_csv(), yesterday)
+        conky = Conky()
+
+        while True:
+            has_crossed_time_bound = False
+            today = today_()
+            if not today == yesterday:
+                schedule.update_day(today)
+            yesterday = today
+
+            while (len(schedule.time_bounds) > 0 and
+                    now_() > schedule.time_bounds[0]):
+                schedule.time_bounds.pop(0)
+                has_crossed_time_bound = True
+
+            if has_crossed_time_bound:
+                schedule.update_status()
+
+            sleep(5)
+
+    except KeyboardInterrupt:
+        print("\ndocket: Interrupted. Goodbye!")
+
+def log(text):
+    print("docket: " + str(text))
+
+def now_():
+    return datetime.today().strftime("%H:%M")
+
+def today_():
+    return datetime.today().isoweekday()
 
 def parse_csv():
     raw_sched = []
     with open("schedule.csv") as reader:
-        print("Opening and reading schedule spreadsheet...")
+        log("Opening and reading schedule spreadsheet...")
         lines = reader.readlines()
         for line in lines:
             raw_sched += [line.replace("\n", "").split(",")]
@@ -23,7 +62,7 @@ class Subject:
         self.end  = end
         self.status = "0"
 
-        self.update_status(datetime.today().strftime("%H:%M"))
+        self.update_status(now_())
 
     def update_status(self, now):
         if now < self.start:
@@ -34,16 +73,16 @@ class Subject:
             self.status = "1"
 
 class Schedule:
-    def __init__(self, raw_sched):
+    def __init__(self, raw_sched, today):
         self.time_bounds = []
         self.week = []
         self.day = []
 
         self._init_week(raw_sched)
-        self.update_day()
+        self.update_day(today)
 
     def _init_week(self, raw_sched):
-        print("Converting schedule to object...")
+        log("Converting schedule to object...")
         # convert raw sched table to table of objects
         for raw_row in raw_sched:
             row = []
@@ -53,22 +92,23 @@ class Schedule:
                 self.time_bounds += start, end
             self.week += [row]
 
-        print("Gathering time bounds...")
+        log("Gathering time bounds...")
         # quick and dirty unique filtering for time bounds
         filter = dict()
         for key in self.time_bounds:
             filter[key] = 0
         self.time_bounds = list(filter.keys())
+        self.time_bounds.sort()
 
 
-    def update_day(self):
-        print("Updating today's schedule...")
+    def update_day(self, today):
+        log("Updating today's schedule...")
         # get today's subjects
         self.day = []
         for row in self.week:
             self.day += [row[today]]
 
-        print("Compressing today's schedule...")
+        log("Compressing today's schedule...")
         # remove blanks
         col = 0
         while col < len(self.day):
@@ -87,102 +127,97 @@ class Schedule:
                 col += 1
 
     def update_status(self):
-        print("Updating subject statuses...")
-        now = datetime.today().strftime("%H:%M")
+        log("Updating subject statuses...")
+        now = now_()
         for subj in self.day:
             subj.update_status(now)
 
 class Conky:
-    @staticmethod
-    def read_config():
-        print("Reading conky config...")
-        lines = []
+    def __init__(self):
+        log("Reading conky config...")
         with open("conky-docket.conf") as reader:
-            lines = reader.readlines()
+            self.lines = reader.readlines()
 
-        print("Parsing settings (fonts)...")
+        self.settings = {}
+        self.parse_settings()
+
+        self.text = []
+
+    def parse_settings(self):
+        log("Parsing settings (fonts)...")
         settings = {
                 "l_font": "",
                 "t_font": ""
                 }
-        for line in lines:
+
+        # look for settings variables
+        for line in self.lines:
             if ((not settings["l_font"] == []) 
                     and (not settings["t_font"] == [])):
                 break
+
             if settings["l_font"] == None:
                 buffer = re.search('^\s*l_font\s*=\s*"(.*)",\n', line)
                 if buffer == None:
                     settings["l_font"] = ""
                 else:
-                    print("Label font: " + buffer.group())
+                    log("Label font: " + buffer.group())
                     settings["l_font"] = buffer.group()
+
             if settings["t_font"] == None:
                 buffer = re.search('^\s*u_font\s*=\s*"(.*)",\n', line)
                 if buffer == None:
                     settings["t_font"] = ""
                 else:
-                    print("Time font: " + buffer.group())
+                    log("Time font: " + buffer.group())
                     settings["t_font"] = buffer.group()
 
-        return lines, settings
+    def create_text(self, sched):
+        log("Generating conky.text...")
 
-    # conky.text format:
-    # ${colorN}${font name:size=size}Subj.name
-    # ${colorN}${font name:size=size}Subj.start-Subj.end
+        # conky.text format:
+        # ${colorN}${font name:size=size}Subj.name
+        # ${colorN}${font name:size=size}Subj.start-Subj.end
+        # <blank line>
 
-    @staticmethod
-    def create_text(sched, settings):
-        print("Generating conky.text...")
-        conky_text = []
+        self.text = []
         for subj in sched:
-            conky_text += ["${{color{status}}}${{font {font}}}{name}\n".format(
+            self.text += ["${{color{status}}}${{font {font}}}{name}\n".format(
                     status = subj.status,
-                    font = settings["l_font"],
+                    font = self.settings["l_font"],
                     name = subj.name)]
-            conky_text += ["${{color3}}${{font {font}}}{start}-{end}\n".format(
+
+            self.text += ["${{color3}}${{font {font}}}{start}-{end}\n".format(
                     status = subj.status,
-                    font = settings["t_font"],
+                    font = self.settings["t_font"],
                     start = subj.start,
                     end = subj.end)]
-            conky_text += ["\n"]
 
-        return conky_text
+            self.text += ["\n"]
 
-    # TODO: "server" to keep checking time (with goodbye message hehe)
+    def update_config(self):
+        log("Writing to conky config...")
+        idx = self.lines.index("conky.text = [[\n") + 1
 
-    @staticmethod
-    def update_config(lines, new_lines):
-        print("Writing to conky config...")
-        idx = lines.index("conky.text = [[\n") + 1
         # replace overlap
-        while (idx < len(lines) and
-                len(new_lines) > 0):
-            lines[idx] = new_lines.pop(0)
+        while (idx < len(self.lines) and
+                len(self.text) > 0):
+            self.lines[idx] = self.text.pop(0)
             idx += 1
+
         # delete old excess
-        while len(lines) > idx:
-            lines.pop()
+        while len(self.lines) > idx:
+            self.lines.pop()
+
         # append new excess
-        for item in new_lines:
-            lines += [item]
-        lines += ["]]"]
+        for item in self.text:
+            self.lines += [item]
+        self.lines += ["]]"]
         
         with open("conky-docket.conf", "w") as writer:
-            writer.writelines(lines)
+            writer.writelines(self.lines)
 
-        print("Conky config updated")
+        log("conky config updated")
 
-raw_sched = parse_csv()
-sched = Schedule(raw_sched)
-lines, settings = Conky.read_config()
-conky_text = Conky.create_text(sched.day, settings)
-Conky.update_config(lines, conky_text)
-
-def main():
-    try:
-        while True:
-            today = datetime.today().strftime("%A")
-            print(today)
-            sleep(3)
-    except KeyboardInterrupt:
-        print("\nInterrupted. Goodbye!")
+if __name__ == "__main__":
+    main()
