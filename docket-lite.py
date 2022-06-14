@@ -6,6 +6,8 @@ from datetime import datetime
 
 today = datetime.today().isoweekday()
 
+# TODO: Logging
+
 def parse_csv():
     raw_sched = []
     with open("schedule.csv") as reader:
@@ -19,8 +21,8 @@ class Subject:
     def __init__(self, name, start, end):
         self.name  = name
         self.start = start
-        self.stop  = end
-        self.status = "0"
+        self.end  = end
+        self.status = "1"
 
 class Schedule:
     def __init__(self, raw_sched):
@@ -61,7 +63,6 @@ class Schedule:
                 self.day.pop(col)
             else:
                 col += 1
-
         # merge continuous
         col = 0
         while col < len(self.day)-1:
@@ -76,11 +77,11 @@ class Schedule:
         now = datetime.today().strftime("%H:%M")
         for subj in self.day:
             if now < subj.start:
-                subj.status = "0"
-            elif now > subj.end:
-                subj.status = "2"
-            else:
                 subj.status = "1"
+            elif now > subj.end:
+                subj.status = "3"
+            else:
+                subj.status = "2"
 
 # TODO: Extract settings for generating conky.text
 
@@ -90,8 +91,8 @@ def read_conky():
         lines = reader.readlines()
 
     settings = {
-            "l_font": None,
-            "t_font": None
+            "l_font": "",
+            "t_font": ""
             }
 
     for line in lines:
@@ -100,18 +101,40 @@ def read_conky():
             break
         if settings["l_font"] == None:
             buffer = re.search('^\s*l_font\s*=\s*"(.*)",\n', line)
-            if not buffer == None:
+            if buffer == None:
+                settings["l_font"] = ""
+            else:
                 settings["l_font"] = buffer.group()
         if settings["u_font"] == None:
             buffer = re.search('^\s*u_font\s*=\s*"(.*)",\n', line)
-            if not buffer == None:
+            if buffer == None:
+                settings["u_font"] = ""
+            else:
                 settings["u_font"] = buffer.group()
+
+    return lines, settings
 
 # TODO: make conky.text
 
 # conky.text format:
-# ${colorN}{font name:size=size}Subj.name
-# ${colorN}{font name:size=size}Subj.start-Subj.end
+# ${colorN}${font name:size=size}Subj.name
+# ${colorN}${font name:size=size}Subj.start-Subj.end
+
+def create_conky_text(sched, settings):
+    conky_text = []
+    for subj in sched:
+        conky_text += ["${{color{status}}}${{font {font}}}{name}\n".format(
+                status = subj.status,
+                font = settings["l_font"],
+                name = subj.name)]
+        conky_text += ["${{color4}}${{font {font}}}{start}-{end}\n".format(
+                status = subj.status,
+                font = settings["t_font"],
+                start = subj.start,
+                end = subj.end)]
+        conky_text += ["\n"]
+
+    return conky_text
 
 # TODO: "server" to keep checking time (with goodbye message hehe)
 
@@ -130,14 +153,14 @@ def write_conky(lines, new_lines):
         lines += [item]
     lines += ["]]"]
     
-    with open("conky-docket.conf") as writer:
+    with open("conky-docket.conf", "w") as writer:
         writer.writelines(lines)
 
 raw_sched = parse_csv()
 sched = Schedule(raw_sched)
-print(sched.week[0][1].name)
-print(sched.day[2].name)
-print(sched.time_bounds)
+lines, settings = read_conky()
+conky_text = create_conky_text(sched.day, settings)
+write_conky(lines, conky_text)
 
 def main():
     while True:
