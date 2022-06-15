@@ -77,13 +77,27 @@ class Conky:
         for item in self.text:
             self.lines += [item]
         self.lines += ["]]"]
-
-        self.lines += 
         
         with open("conky-docket.conf", "w") as writer:
             writer.writelines(self.lines)
 
         log("conky config updated")
+
+    def _substite_string(self):
+        string = []
+        settings = [
+                "upcoming_color",
+                "ongoing_color",
+                "completed_color",
+                "upcoming_font",
+                "ongoing_font",
+                "completed_font",
+                "time_color",
+                "time_font"
+                ]
+
+        for setting in settings:
+            string += ["conky.text = conky.text:gsub(\"{setting}\", {setting})".format(setting = setting)]
 
 if __name__ == "__main__":
     conky = Conky()
