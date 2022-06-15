@@ -78,7 +78,7 @@ class Conky:
         self.text = []
         first_run = True
         for subj in sched:
-            if first_run:
+            if not first_run:
                 self.text += ["\n"]
 
             self.text += ["${{color{status}}}${{font {font}}}{name}\n".format(
