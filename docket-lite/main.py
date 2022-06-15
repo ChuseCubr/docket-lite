@@ -12,11 +12,6 @@ def start():
         schedule = Schedule(parse_csv(), yesterday, now_())
         conky = Conky()
 
-        try:
-            refresh = int(conky.settings["docket_refresh"])
-        except:
-            refresh = 5
-
         while True:
             has_crossed_time_bound = False
             today = today_()
@@ -35,7 +30,7 @@ def start():
                 schedule.update_status(now_())
                 conky.update_config(schedule.day)
 
-            sleep(refresh)
+            sleep(conky.refresh)
 
     except KeyboardInterrupt:
         print("\ndocket: Interrupted. Goodbye!")
