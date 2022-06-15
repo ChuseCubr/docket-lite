@@ -10,19 +10,19 @@ class Conky:
         with open("conky-docket.conf") as reader:
             self.lines = reader.readlines()
 
-        self.settings = {}
+        self.settings = {
+                "refresh": 5,
+                "time_offset": 10,
+                "time_voffset": -10,
+                }
         self.parse_settings()
 
         self.text = []
 
     def parse_settings(self):
-        log("Parsing settings (fonts)...")
-
-        # overcomplicated 'cause this used to have more settings
-        settings = ["refresh"]
-
-        for setting in settings:
-            self.settings[setting] = ""
+        settings = list(self.settings.keys())
+        print(settings)
+        log("Parsing settings...")
 
         # look for settings variables
         for line in self.lines:
@@ -83,7 +83,9 @@ class Conky:
                     color = subj.status + "_color",
                     font = subj.status + "_font",
                     name = subj.name)]
-            self.text += ["${{color time_color}}${{font time_font}}{start}-{end}\n".format(
+            self.text += ["${{voffset {voffset}}}${{offset {offset}}}${{color time_color}}${{font time_font}}{start}-{end}\n".format(
+                    voffset = self.settings["time_voffset"],
+                    offset = self.settings["time_offset"],
                     start = subj.start,
                     end = subj.end)]
             first_run = False
@@ -107,6 +109,7 @@ class Conky:
             self.lines += [item]
         self.lines += ["]]"]
         self.lines += self._substite_string()
+        self.lines += ["\nprint(conky.text)"]
         
         with open("conky-docket.conf", "w") as writer:
             writer.writelines(self.lines)
