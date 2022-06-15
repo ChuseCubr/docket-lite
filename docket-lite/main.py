@@ -11,6 +11,10 @@ def start():
         yesterday = (today_() + 1) % 7
         schedule = Schedule(parse_csv(), yesterday, now_())
         conky = Conky()
+        try:
+            refresh = float(conky.settings["refresh"])
+        except:
+            refresh = 5
 
         while True:
             has_crossed_time_bound = False
@@ -30,8 +34,9 @@ def start():
                 log("Updating conky config...")
                 schedule.update_status(now_())
                 conky.update_config(schedule.day)
+                log("Refresh period set to {}s".format(refresh))
 
-            sleep(conky.refresh)
+            sleep(refresh)
 
     except KeyboardInterrupt:
         print("\ndocket: Interrupted. Goodbye!")

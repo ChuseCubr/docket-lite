@@ -10,13 +10,19 @@ class Conky:
         with open("conky-docket.conf") as reader:
             self.lines = reader.readlines()
 
-        self.refresh = 5
+        self.settings = {}
         self.parse_settings()
 
         self.text = []
 
     def parse_settings(self):
-        log("Setting refresh period...")
+        log("Parsing settings (fonts)...")
+
+        # overcomplicated 'cause this used to have more settings
+        settings = ["refresh"]
+
+        for setting in settings:
+            self.settings[setting] = ""
 
         # look for settings variables
         for line in self.lines:
@@ -24,17 +30,40 @@ class Conky:
             if line == "conky.config=[[\n":
                 break
 
-            if line.startswith("docket_refresh"):
-                regex_pattern = "=(.*)\n"
-                temp = re.search(regex_pattern, line)
-                group = temp.group(1).strip(" '\"")
-                log("Refresh period: " + group + "s")
-                self.refresh = float(group)
+            # if all settings set
+            if (len(settings) == 0):
+                break
+
+            # check if it's a setting line
+            i = 0
+            while i < len(settings):
+                found = self._parse_setting(line, settings[i])
+                if found:
+                    settings.pop(i)
+                else:
+                    i += 1
 
     def update_config(self, sched):
         self._create_text(sched)
         self._write_config()
         pass
+
+    def _parse_setting(self, line, setting_name):
+        # ignore if not setting variable
+        if not line.lstrip().startswith(setting_name):
+            return False
+
+        # capture content
+        regex_pattern = "=(.*)\n"
+        temp = re.search(regex_pattern, line)
+
+        if temp == None:
+            return False
+
+        group = temp.group(1).strip(" '\"")
+        log(setting_name + ": " + group)
+        self.settings[setting_name] = group
+        return True
 
     def _create_text(self, sched):
         log("Generating conky.text...")
