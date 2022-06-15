@@ -41,7 +41,7 @@ class Conky:
             while i < len(settings):
                 found = self._parse_setting(line, settings[i])
                 if found:
-                    settings.remove(settings[i])
+                    settings.pop(i)
                 else:
                     i += 1
 
@@ -56,7 +56,7 @@ class Conky:
             return False
 
         # capture content
-        regex_pattern = "^.+?=(.*),\n$"
+        regex_pattern = "=(.*)\n"
         temp = re.search(regex_pattern, line)
 
         if temp == None:
@@ -115,3 +115,6 @@ class Conky:
             writer.writelines(self.lines)
 
         log("conky config updated")
+
+if __name__ == "__main__":
+    conky = Conky()
