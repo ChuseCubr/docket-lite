@@ -143,34 +143,57 @@ class Conky:
 
         self.text = []
 
+    # TODO: fix parsing
+    # current problem: can't tell if done since "" passes None check
+    # solutions: 
+    #   - fix ""
+    #   - pop from available_settings
+
     def parse_settings(self):
         log("Parsing settings (fonts)...")
-        settings = {
-                "l_font": "",
-                "t_font": ""
-                }
+
+        settings = [
+                "l_font",
+                "t_font"
+                ]
+
+        for setting in settings:
+            self.settings[setting] = ""
 
         # look for settings variables
         for line in self.lines:
-            if ((not settings["l_font"] == []) 
-                    and (not settings["t_font"] == [])):
+            # if past settings
+            if line == "conky.text=[[\n":
                 break
 
-            if settings["l_font"] == None:
-                buffer = re.search('^\s*l_font\s*=\s*"(.*)",\n', line)
-                if buffer == None:
-                    settings["l_font"] = ""
-                else:
-                    log("Label font: " + buffer.group())
-                    settings["l_font"] = buffer.group()
+            # if all settings set
+            if (len(settings) == 0):
+                break
 
-            if settings["t_font"] == None:
-                buffer = re.search('^\s*u_font\s*=\s*"(.*)",\n', line)
-                if buffer == None:
-                    settings["t_font"] = ""
+            # check if it's a setting line
+            i = 0
+            while i < len(settings):
+                found = self._parse_setting(line, settings[i])
+                if found:
+                    settings.remove(settings[i])
                 else:
-                    log("Time font: " + buffer.group())
-                    settings["t_font"] = buffer.group()
+                    i += 1
+
+    def _parse_setting(self, line, setting_name):
+        # ignore if not setting variable
+        if not line.lstrip().startswith(setting_name):
+            return False
+
+        # capture content
+        regex_pattern = ".*\"(.*)\""
+        temp = re.search(regex_pattern, line)
+
+        if temp == None:
+            return False
+
+        log(setting_name + ": " + temp.group(1))
+        self.settings[setting_name] = temp.group(1)
+        return True
 
     def create_text(self, sched):
         log("Generating conky.text...")
@@ -220,4 +243,5 @@ class Conky:
         log("conky config updated")
 
 if __name__ == "__main__":
-    main()
+    # main()
+    pass
