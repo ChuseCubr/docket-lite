@@ -4,17 +4,16 @@ import re
 from time import sleep
 from datetime import datetime
 
-#  raw_sched = parse_csv()
-#  sched = Schedule(raw_sched)
-#  lines, settings = Conky.read_config()
-#  conky_text = Conky.create_text(sched.day, settings)
-#  Conky.update_config(lines, conky_text)
-
 def main():
     try:
-        yesterday = (today_() + 1) % 7
+        yesterday = today_()
         schedule = Schedule(parse_csv(), yesterday)
         conky = Conky()
+
+        try:
+            refresh = int(conky.settings["docket_refresh"])
+        except:
+            refresh = 5
 
         while True:
             has_crossed_time_bound = False
@@ -25,13 +24,16 @@ def main():
 
             while (len(schedule.time_bounds) > 0 and
                     now_() > schedule.time_bounds[0]):
-                schedule.time_bounds.pop(0)
+                crossed = schedule.time_bounds.pop(0)
+                log("Crossed time bound: " + crossed)
                 has_crossed_time_bound = True
 
             if has_crossed_time_bound:
+                log("Updating conky config...")
                 schedule.update_status()
+                conky.update_config(schedule.day)
 
-            sleep(5)
+            sleep(refresh)
 
     except KeyboardInterrupt:
         print("\ndocket: Interrupted. Goodbye!")
@@ -116,6 +118,7 @@ class Schedule:
                 self.day.pop(col)
             else:
                 col += 1
+
         # merge continuous
         col = 0
         while col < len(self.day)-1:
@@ -143,12 +146,6 @@ class Conky:
 
         self.text = []
 
-    # TODO: fix parsing
-    # current problem: can't tell if done since "" passes None check
-    # solutions: 
-    #   - fix ""
-    #   - pop from available_settings
-
     def parse_settings(self):
         log("Parsing settings (fonts)...")
 
@@ -163,7 +160,7 @@ class Conky:
         # look for settings variables
         for line in self.lines:
             # if past settings
-            if line == "conky.text=[[\n":
+            if line == "conky.config=[[\n":
                 break
 
             # if all settings set
@@ -179,23 +176,29 @@ class Conky:
                 else:
                     i += 1
 
+    def update_config(self, sched):
+        self._create_text(sched)
+        self._write_config()
+        pass
+
     def _parse_setting(self, line, setting_name):
         # ignore if not setting variable
         if not line.lstrip().startswith(setting_name):
             return False
 
         # capture content
-        regex_pattern = ".*\"(.*)\""
+        regex_pattern = "^.+?=(.*),\n$"
         temp = re.search(regex_pattern, line)
 
         if temp == None:
             return False
 
-        log(setting_name + ": " + temp.group(1))
-        self.settings[setting_name] = temp.group(1)
+        group = temp.group(1).strip(" '\"")
+        log(setting_name + ": " + group)
+        self.settings[setting_name] = group
         return True
 
-    def create_text(self, sched):
+    def _create_text(self, sched):
         log("Generating conky.text...")
 
         # conky.text format:
@@ -218,7 +221,7 @@ class Conky:
 
             self.text += ["\n"]
 
-    def update_config(self):
+    def _write_config(self):
         log("Writing to conky config...")
         idx = self.lines.index("conky.text = [[\n") + 1
 
@@ -243,5 +246,5 @@ class Conky:
         log("conky config updated")
 
 if __name__ == "__main__":
-    # main()
+    main()
     pass
