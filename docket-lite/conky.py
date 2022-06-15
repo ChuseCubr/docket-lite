@@ -77,6 +77,7 @@ class Conky:
         for item in self.text:
             self.lines += [item]
         self.lines += ["]]"]
+        self.lines += self._substite_string()
         
         with open("conky-docket.conf", "w") as writer:
             writer.writelines(self.lines)
@@ -98,6 +99,8 @@ class Conky:
 
         for setting in settings:
             string += ["conky.text = conky.text:gsub(\"{setting}\", {setting})".format(setting = setting)]
+
+        return string
 
 if __name__ == "__main__":
     conky = Conky()
