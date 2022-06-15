@@ -76,19 +76,21 @@ class Conky:
         # <blank line>
 
         self.text = []
+        first_run = True
         for subj in sched:
+            if first_run:
+                self.text += ["\n"]
+
             self.text += ["${{color{status}}}${{font {font}}}{name}\n".format(
                     status = subj.status,
                     font = self.settings["l_font"],
                     name = subj.name)]
-
             self.text += ["${{color3}}${{font {font}}}{start}-{end}\n".format(
                     status = subj.status,
                     font = self.settings["t_font"],
                     start = subj.start,
                     end = subj.end)]
-
-            self.text += ["\n"]
+            first_run = False
 
     def _write_config(self):
         log("Writing to conky config...")
