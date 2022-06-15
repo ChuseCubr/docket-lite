@@ -83,9 +83,7 @@ class Conky:
                     color = subj.status + "_color",
                     font = subj.status + "_font",
                     name = subj.name)]
-            self.text += ["${{color {color}}}${{font {font}}}{start}-{end}\n".format(
-                    color = subj.status + "_color",
-                    font = subj.status + "_font",
+            self.text += ["${{color time_color}}${{font time_font}}{start}-{end}\n".format(
                     start = subj.start,
                     end = subj.end)]
             first_run = False
