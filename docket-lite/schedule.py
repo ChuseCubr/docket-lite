@@ -7,17 +7,17 @@ class Subject:
         self.name  = name
         self.start = start
         self.end  = end
-        self.status = "0"
+        self.status = "upcoming"
 
         self.update_status(now)
 
     def update_status(self, now):
         if now < self.start:
-            self.status = "0"
+            self.status = "upcoming"
         elif now > self.end:
-            self.status = "2"
+            self.status = "completed"
         else:
-            self.status = "1"
+            self.status = "ongoing"
 
 class Schedule:
     def __init__(self, raw_sched, today, now):

@@ -18,10 +18,8 @@ class Conky:
     def parse_settings(self):
         log("Parsing settings (fonts)...")
 
-        settings = [
-                "l_font",
-                "t_font"
-                ]
+        # overcomplicated 'cause this used to have more settings
+        settings = ["docket_refresh"]
 
         for setting in settings:
             self.settings[setting] = ""
@@ -81,13 +79,13 @@ class Conky:
             if not first_run:
                 self.text += ["\n"]
 
-            self.text += ["${{color{status}}}${{font {font}}}{name}\n".format(
-                    status = subj.status,
-                    font = self.settings["l_font"],
+            self.text += ["${{color {color}}}${{font {font}}}{name}\n".format(
+                    color = subj.status + "_color",
+                    font = subj.status + "_font",
                     name = subj.name)]
-            self.text += ["${{color3}}${{font {font}}}{start}-{end}\n".format(
-                    status = subj.status,
-                    font = self.settings["t_font"],
+            self.text += ["${{color {color}}}${{font {font}}}{start}-{end}\n".format(
+                    color = subj.status + "_color",
+                    font = subj.status + "_font",
                     start = subj.start,
                     end = subj.end)]
             first_run = False
