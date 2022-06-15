@@ -9,7 +9,7 @@ from conky import Conky
 def start():
     try:
         yesterday = today_()
-        schedule = Schedule(parse_csv(), yesterday)
+        schedule = Schedule(parse_csv(), yesterday, now_())
         conky = Conky()
 
         try:
@@ -32,7 +32,7 @@ def start():
 
             if has_crossed_time_bound:
                 log("Updating conky config...")
-                schedule.update_status()
+                schedule.update_status(now_())
                 conky.update_config(schedule.day)
 
             sleep(refresh)
