@@ -98,7 +98,7 @@ class Conky:
                 ]
 
         for setting in settings:
-            string += ["conky.text = conky.text:gsub(\"{setting}\", {setting})".format(setting = setting)]
+            string += ["\nconky.text = conky.text:gsub(\"{setting}\", {setting})".format(setting = setting)]
 
         return string
 

@@ -8,7 +8,7 @@ from conky import Conky
 
 def start():
     try:
-        yesterday = today_()
+        yesterday = (today_() + 1) % 7
         schedule = Schedule(parse_csv(), yesterday, now_())
         conky = Conky()
 
@@ -17,6 +17,7 @@ def start():
             today = today_()
             if not today == yesterday:
                 schedule.update_day(today)
+                has_crossed_time_bound =True
             yesterday = today
 
             while (len(schedule.time_bounds) > 0 and
