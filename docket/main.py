@@ -2,9 +2,9 @@
 
 from time import sleep
 
-from extras import Log, now_, today_
-from schedule import Schedule
-from conky import Conky
+from docket.extras import Log, now_, today_
+from docket.schedule import Schedule
+from docket.conky import Conky
 
 log = Log()
 
