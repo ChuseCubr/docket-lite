@@ -2,14 +2,14 @@
 
 from time import sleep
 
-from extras import log, parse_csv, now_, today_
+from extras import log, now_, today_
 from schedule import Schedule
 from conky import Conky
 
 def start():
     try:
         yesterday = (today_() + 1) % 7
-        schedule = Schedule(parse_csv(), yesterday, now_())
+        schedule = Schedule(yesterday, now_())
         conky = Conky()
         try:
             refresh = float(conky.settings["refresh"])

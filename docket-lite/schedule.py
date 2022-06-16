@@ -20,33 +20,14 @@ class Subject:
             self.status = "ongoing"
 
 class Schedule:
-    def __init__(self, raw_sched, today, now):
+    def __init__(self, today, now):
         self.time_bounds = []
         self.week = []
         self.day = []
 
+        raw_sched = self._parse_csv()
         self._init_week(raw_sched, now)
         self.update_day(today)
-
-    def _init_week(self, raw_sched, now):
-        log("Converting schedule to object...")
-        # convert raw sched table to table of objects
-        for raw_row in raw_sched:
-            row = []
-            for col in range(1, len(raw_row)):
-                [start, end] = raw_row[0].split("-")
-                row += [Subject(raw_row[col], start, end, now)]
-                self.time_bounds += start, end
-            self.week += [row]
-
-        log("Gathering time bounds...")
-        # quick and dirty unique filtering for time bounds
-        filter = dict()
-        for key in self.time_bounds:
-            filter[key] = 0
-        self.time_bounds = list(filter.keys())
-        self.time_bounds.sort()
-
 
     def update_day(self, today):
         log("Updating today's schedule...")
@@ -78,3 +59,32 @@ class Schedule:
         log("Updating subject statuses...")
         for subj in self.day:
             subj.update_status(now)
+
+    def _parse_csv(self):
+        raw_sched = []
+        with open("schedule.csv") as reader:
+            log("Opening and reading schedule spreadsheet...")
+            lines = reader.readlines()
+            for line in lines:
+                raw_sched += [line.replace("\n", "").split(",")]
+        raw_sched.pop(0)
+        return raw_sched
+
+    def _init_week(self, raw_sched, now):
+        log("Converting schedule to object...")
+        # convert raw sched table to table of objects
+        for raw_row in raw_sched:
+            row = []
+            for col in range(1, len(raw_row)):
+                [start, end] = raw_row[0].split("-")
+                row += [Subject(raw_row[col], start, end, now)]
+                self.time_bounds += start, end
+            self.week += [row]
+
+        log("Gathering time bounds...")
+        # quick and dirty unique filtering for time bounds
+        filter = dict()
+        for key in self.time_bounds:
+            filter[key] = 0
+        self.time_bounds = list(filter.keys())
+        self.time_bounds.sort()
