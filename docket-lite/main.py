@@ -8,52 +8,54 @@ from conky import Conky
 
 log = Log()
 
-def start(
-        conky_path = "conky-docket.conf",
-        schedule_path = "schedule.csv"):
+class Docket:
+    def __init__(
+            self,
+            conky_path = "conky-docket.conf",
+            schedule_path = "schedule.csv",
+            log_path = "docket.log"):
 
-    yesterday = (today_() + 1) % 7
-    schedule = Schedule(yesterday, now_(), schedule_path)
+        self.yesterday = (today_() + 1) % 7
+        self.schedule = Schedule(self.yesterday, now_(), schedule_path)
 
-    conky = Conky(conky_path)
-    if not conky.settings["logging"] == "true":
-        log.disable_file_logging()
+        self.conky = Conky(conky_path)
+        if not self.conky.settings["logging"] == "true":
+            log.disable_file_logging()
 
-    try:
-        refresh = float(conky.settings["refresh"])
-    except:
-        refresh = 5
+        try:
+            self.refresh = float(self.conky.settings["refresh"])
+        except:
+            self.refresh = 5
 
-    log.info("Refresh period set to {}s".format(refresh))
+        log.info("Refresh period set to {}s".format(self.refresh))
 
-    server(conky, schedule, yesterday, refresh)
+    def start(self):
+        try:
+            while True:
+                has_crossed_time_bound = False
+                today = today_()
+                if not today == self.yesterday:
+                    self.schedule.update_day(today)
+                    has_crossed_time_bound =True
+                self.yesterday = today
 
-def server(conky, schedule, yesterday, refresh):
-    try:
-        while True:
-            has_crossed_time_bound = False
-            today = today_()
-            if not today == yesterday:
-                schedule.update_day(today)
-                has_crossed_time_bound =True
-            yesterday = today
+                while (len(self.schedule.time_bounds) > 0 and
+                        now_() > self.schedule.time_bounds[0]):
+                    crossed = self.schedule.time_bounds.pop(0)
+                    log.info("Crossed time bound: " + crossed)
+                    has_crossed_time_bound = True
 
-            while (len(schedule.time_bounds) > 0 and
-                    now_() > schedule.time_bounds[0]):
-                crossed = schedule.time_bounds.pop(0)
-                log.info("Crossed time bound: " + crossed)
-                has_crossed_time_bound = True
+                if has_crossed_time_bound:
+                    log.debug("Updating conky config...")
+                    self.schedule.update_status(now_())
+                    self.conky.update_config(self.schedule.day)
 
-            if has_crossed_time_bound:
-                log.debug("Updating conky config...")
-                schedule.update_status(now_())
-                conky.update_config(schedule.day)
+                sleep(self.refresh)
 
-            sleep(refresh)
-
-    except KeyboardInterrupt:
-        print("\ndocket: Received KeyboardInterrupt. Goodbye!")
+        except KeyboardInterrupt:
+            print("\ndocket: Received KeyboardInterrupt. Goodbye!")
 
 if __name__ == "__main__":
-    start()
+    docket = Docket()
+    docket.start()
     pass
