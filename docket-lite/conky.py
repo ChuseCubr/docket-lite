@@ -7,7 +7,6 @@ log= logging.getLogger("docket")
 
 class Conky:
     def __init__(self):
-        log.debug("Reading conky config...")
         self.lines = []
         self.settings = {
                 "refresh": 5,
@@ -26,13 +25,15 @@ class Conky:
 
 
 
-    # private methods
+    ## private methods
+    # file handling
     def _read_config(self):
+        log.debug("Reading conky config...")
         try:
             with open("conky-docket.conf") as reader:
                 self.lines = []
                 for line in reader:
-                    # ignore conky.text
+                    # ignore everything after conky.text line
                     if not re.search("^\s*conky.text\s*=\s*", line) == None:
                         break
                     self.lines += [line]
@@ -41,6 +42,21 @@ class Conky:
             log.error("Error occurred while attempting to read conky config (./conky-docket.conf)")
             raise
 
+    def _write_config(self):
+        # append new conky.text
+        self.lines += self.text
+
+        log.debug("Writing to conky config...")
+        try:
+            with open("conky-docket.conf", "w") as writer:
+                writer.writelines(self.lines)
+
+            log.info("conky config updated")
+        except:
+            log.error("An error occurred while attempting to write conky config.")
+            raise
+
+    # file parsing
     def _parse_settings(self):
         settings = list(self.settings.keys())
         log.debug("Parsing settings...")
@@ -79,6 +95,7 @@ class Conky:
         self.settings[setting_name] = group
         return True
 
+    # content generation
     def _create_text(self, sched):
         log.debug("Generating conky.text...")
 
@@ -107,18 +124,3 @@ class Conky:
 
         # make lua handle the string substitution here
         self.text += ["]]\n\nconky.text = insert_styles(conky.text, docket_styles)"]
-
-    def _write_config(self):
-        log.debug("Writing to conky config...")
-
-        # append new conky.text
-        self.lines += self.text
-
-        try:
-            with open("conky-docket.conf", "w") as writer:
-                writer.writelines(self.lines)
-
-            log.info("conky config updated")
-        except:
-            log.error("An error occurred while attempting to write conky config.")
-            raise

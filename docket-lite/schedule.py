@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
 import logging
-from extras import Log
-
 log = logging.getLogger("docket")
 
 class Subject:
@@ -22,6 +20,8 @@ class Subject:
         else:
             self.status = "ongoing"
 
+
+
 class Schedule:
     def __init__(self, today, now):
         self.time_bounds = []
@@ -34,7 +34,6 @@ class Schedule:
 
     def update_day(self, today):
         log.debug("Updating today's schedule...")
-        # get today's subjects
         self.day = []
         for row in self.week:
             self.day += [row[today]]
@@ -63,11 +62,15 @@ class Schedule:
         for subj in self.day:
             subj.update_status(now)
 
+
+
+    ## private methods
+    # file handling
     def _parse_csv(self):
+        log.debug("Reading schedule spreadsheet...")
         raw_sched = []
         try:
             with open("schedulef.csv") as reader:
-                log.debug("Reading schedule spreadsheet...")
                 lines = reader.readlines()
                 for line in lines:
                     raw_sched += [line.replace("\n", "").split(",")]
@@ -79,9 +82,9 @@ class Schedule:
 
         return raw_sched
 
+    # data initialization
     def _init_week(self, raw_sched, now):
         log.debug("Converting schedule to object...")
-        # convert raw sched table to table of objects
         for raw_row in raw_sched:
             row = []
             for col in range(1, len(raw_row)):
@@ -91,7 +94,6 @@ class Schedule:
             self.week += [row]
 
         log.debug("Gathering time bounds...")
-        # quick and dirty unique filtering for time bounds
         filter = dict()
         for key in self.time_bounds:
             filter[key] = 0
