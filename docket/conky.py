@@ -138,9 +138,7 @@ class Conky:
             self.text += ["${offset time_offset}"]
             self.text += ["${color time_color}"]
             self.text += ["${font time_font}"]
-            self.text += ["{}-{}".format(subj.start, subj.end)]
-            if self.settings["vertical_layout"]:
-                self.text += ["\n"]
+            self.text += ["{}-{}\n".format(subj.start, subj.end)]
 
             first_run = False
 
