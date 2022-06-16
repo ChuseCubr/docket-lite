@@ -9,11 +9,21 @@ from conky import Conky
 log = Log()
 
 class Docket:
-    def __init__(
-            self,
-            conky_path = "conky-docket.conf",
-            schedule_path = "schedule.csv",
-            log_path = "docket.log"):
+    def __init__(self, **kwargs):
+        if "conky_path" in kwargs.keys():
+            conky_path = kwargs["conky_path"]
+        else:
+            conky_path = "conky-docket.conf"
+
+        if "schedule_path" in kwargs.keys():
+            schedule_path = kwargs["conky_path"]
+        else:
+            schedule_path = "schedule.csv"
+
+        if "log_path" in kwargs.keys():
+            log_path = kwargs["conky_path"]
+        else:
+            log_path = "docket.log"
 
         self.yesterday = (today_() + 1) % 7
         self.schedule = Schedule(self.yesterday, now_(), schedule_path)
