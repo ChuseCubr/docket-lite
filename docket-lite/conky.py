@@ -8,7 +8,12 @@ class Conky:
     def __init__(self):
         log("Reading conky config...")
         with open("conky-docket.conf") as reader:
-            self.lines = reader.readlines()
+            self.lines = []
+            for line in reader:
+                # ignore conky.text
+                if line == "conky.text = [[\n":
+                    break
+                self.lines += line
 
         self.settings = {
                 "refresh": 5,
@@ -20,7 +25,6 @@ class Conky:
 
     def parse_settings(self):
         settings = list(self.settings.keys())
-        print(settings)
         log("Parsing settings...")
 
         # look for settings variables
@@ -48,14 +52,12 @@ class Conky:
         pass
 
     def _parse_setting(self, line, setting_name):
-        # ignore if not setting variable
-        if not line.lstrip().startswith(setting_name):
-            return False
-
         # capture content
-        regex_pattern = "=(.*)\n"
+        regex_pattern = "\s*{}\s*=\s*(.*)\\n"
+        regex_pattern = regex_pattern.format(setting_name)
         temp = re.search(regex_pattern, line)
 
+        # if not it, ignore
         if temp == None:
             return False
 
@@ -72,7 +74,7 @@ class Conky:
         # ${colorN}${font name:size=size}Subj.start-Subj.end
         # <blank line>
 
-        self.text = []
+        self.text = ["conky.text = [[\n"]
         first_run = True
         for subj in sched:
             if not first_run:
@@ -86,27 +88,14 @@ class Conky:
                     start = subj.start,
                     end = subj.end)]
             first_run = False
+        self.text += ["]]\n\nconky.text = insert_styles(conky.text, docket_styles)"]
 
     def _write_config(self):
         log("Writing to conky config...")
-        idx = self.lines.index("conky.text = [[\n") + 1
 
-        # replace overlap
-        while (idx < len(self.lines) and
-                len(self.text) > 0):
-            self.lines[idx] = self.text.pop(0)
-            idx += 1
+        # append new conky.text
+        self.lines += self.text
 
-        # delete old excess
-        while len(self.lines) > idx:
-            self.lines.pop()
-
-        # append new excess
-        for item in self.text:
-            self.lines += [item]
-        self.lines += ["]]\n\n",
-                "conky.text = insert_styles(conky.text, docket_styles)"]
-        
         with open("conky-docket.conf", "w") as writer:
             writer.writelines(self.lines)
 
