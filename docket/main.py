@@ -49,29 +49,29 @@ class Docket:
 
     # private methods
     def _handle_kwargs(self, kwargs):
-        if "conky_path" in kwargs.keys():
-            conky_path = kwargs["conky_path"]
-            self.conky = Conky(conky_path)
-        else:
-            self.conky = Conky()
-
-        self.yesterday = (today_() + 1) % 7
-        if "schedule_path" in kwargs.keys():
-            schedule_path = kwargs["conky_path"]
-            self.schedule = Schedule(self.yesterday, now_(), schedule_path)
-        else:
-            self.schedule = Schedule(self.yesterday, now_())
-
         if "log_to_file" in kwargs.keys():
             log_to_file = kwargs["log_to_file"]
         else:
             log_to_file = False
 
         if "log_path" in kwargs.keys():
-            log_path = kwargs["conky_path"]
+            log_path = kwargs["log_path"]
             self.log = Log(log_to_file, log_path)
         else:
             self.log = Log()
+
+        self.yesterday = (today_() + 1) % 7
+        if "schedule_path" in kwargs.keys():
+            schedule_path = kwargs["schedule_path"]
+            self.schedule = Schedule(self.yesterday, now_(), schedule_path)
+        else:
+            self.schedule = Schedule(self.yesterday, now_())
+
+        if "conky_path" in kwargs.keys():
+            conky_path = kwargs["conky_path"]
+            self.conky = Conky(conky_path)
+        else:
+            self.conky = Conky()
 
 if __name__ == "__main__":
     docket = Docket()
