@@ -66,15 +66,16 @@ class Schedule:
     def _parse_csv(self):
         raw_sched = []
         try:
-            with open("schedule.csv") as reader:
+            with open("schedulef.csv") as reader:
                 log.debug("Reading schedule spreadsheet...")
                 lines = reader.readlines()
                 for line in lines:
                     raw_sched += [line.replace("\n", "").split(",")]
                 raw_sched.pop(0)
 
-        except Exception as e:
+        except:
             log.error("Error while attempting to read schedule spreadsheet (./schedule.csv)")
+            raise
 
         return raw_sched
 

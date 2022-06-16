@@ -37,8 +37,9 @@ class Conky:
                         break
                     self.lines += [line]
 
-        except Exception as e:
+        except:
             log.error("Error occurred while attempting to read conky config (./conky-docket.conf)")
+            raise
 
     def _parse_settings(self):
         settings = list(self.settings.keys())
@@ -118,5 +119,6 @@ class Conky:
                 writer.writelines(self.lines)
 
             log.info("conky config updated")
-        except Exception as e:
+        except:
             log.error("An error occurred while attempting to write conky config.")
+            raise
