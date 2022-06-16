@@ -11,7 +11,7 @@ class Conky:
         self.lines = []
         self.settings = {
                 "refresh": 5,
-                "logging" : False
+                "vertical_spacing": 2,
                 }
 
         self._read_config()
@@ -83,7 +83,7 @@ class Conky:
 
     def _parse_setting(self, line, setting_name):
         # capture content
-        regex_pattern = "\s*{}\s*=\s*(.*)\n"
+        regex_pattern = "\s*{}\s*=\s*(.+)\n"
         regex_pattern = regex_pattern.format(setting_name)
         temp = re.search(regex_pattern, line)
 
@@ -105,12 +105,19 @@ class Conky:
         # ${colorN}${font name:size=size}Subj.start-Subj.end
         # <blank line>
 
+        try:
+            vertical_spacing = int(self.settings["vertical_spacing"])
+        except:
+            vertical_spacing = 2
+
         self.text = ["conky.text = [[\n"]
+
         # for vertical spacing between subjects
         first_run = True
         for subj in sched:
             if not first_run:
-                self.text += ["\n\n"]
+                for _ in range(vertical_spacing):
+                    self.text += ["\n"]
 
             self.text += ["${{color {}}}".format(subj.status + "_color")]
             self.text += ["${{font {}}}" .format(subj.status + "_font")]

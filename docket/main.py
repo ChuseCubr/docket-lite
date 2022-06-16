@@ -21,14 +21,16 @@ class Docket:
         else:
             self.schedule = Schedule(self.yesterday, now_())
 
+        if "log_to_file" in kwargs.keys():
+            log_to_file = kwargs["log_to_file"]
+        else:
+            log_to_file = False
+
         if "log_path" in kwargs.keys():
             log_path = kwargs["conky_path"]
-            self.log = Log(log_path)
+            self.log = Log(log_to_file, log_path)
         else:
             self.log = Log()
-
-        if not self.conky.settings["logging"] == "true":
-            self.log.disable_file_logging()
 
         try:
             self.refresh = float(self.conky.settings["refresh"])
@@ -41,6 +43,7 @@ class Docket:
         try:
             while True:
                 has_crossed_time_bound = False
+
                 today = today_()
                 if not today == self.yesterday:
                     self.schedule.update_day(today)

@@ -4,7 +4,7 @@ from datetime import datetime
 import logging
 
 class Log:
-    def __init__(self, path = "docket.log"):
+    def __init__(self, log_to_file = True, path = "docket.log"):
         self.logger = logging.getLogger("docket")
         self.logger.setLevel(logging.DEBUG)
 
@@ -17,16 +17,13 @@ class Log:
         self.logger.addHandler(ch)
 
         # file logging toggleable
-        self.fh = logging.FileHandler(path)
-        self.fh.setLevel(logging.DEBUG)
+        if log_to_file:
+            self.fh = logging.FileHandler(path)
+            self.fh.setLevel(logging.DEBUG)
 
-        fh_formatter = logging.Formatter('[%(asctime)s] %(name)s - %(levelname)s: %(message)s')
-        self.fh.setFormatter(fh_formatter)
-        self.logger.addHandler(self.fh)
-
-    def disable_file_logging(self):
-        self.info("Disabled file logging")
-        self.logger.removeHandler(self.fh)
+            fh_formatter = logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s')
+            self.fh.setFormatter(fh_formatter)
+            self.logger.addHandler(self.fh)
 
     # wrappers
     def info(self, text):
