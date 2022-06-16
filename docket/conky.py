@@ -12,6 +12,9 @@ class Conky:
         self.settings = {
                 "refresh": 5,
                 "vertical_spacing": 2,
+                "horizontal_spacing": 50,
+                "vertical_layout": "true",
+                "right_align": "false"
                 }
 
         self._read_config()
@@ -57,6 +60,10 @@ class Conky:
     # file parsing
     def _parse_settings(self):
         settings = list(self.settings.keys())
+        booleans = [
+                "vertical_layout",
+                "right_align"
+                ]
         log.debug("Parsing settings...")
 
         # look for settings variables
@@ -77,6 +84,9 @@ class Conky:
                     settings.pop(i)
                 else:
                     i += 1
+
+        for setting in booleans:
+            self.settings[setting] = self.settings[setting] == "true"
 
     def _parse_setting(self, line, setting_name):
         # capture content
