@@ -6,38 +6,36 @@ from docket.extras import Log, now_, today_
 from docket.schedule import Schedule
 from docket.conky import Conky
 
-log = Log()
-
 class Docket:
     def __init__(self, **kwargs):
         if "conky_path" in kwargs.keys():
             conky_path = kwargs["conky_path"]
+            self.conky = Conky(conky_path)
         else:
-            conky_path = "conky-docket.conf"
+            self.conky = Conky()
 
+        self.yesterday = (today_() + 1) % 7
         if "schedule_path" in kwargs.keys():
             schedule_path = kwargs["conky_path"]
+            self.schedule = Schedule(self.yesterday, now_(), schedule_path)
         else:
-            schedule_path = "schedule.csv"
+            self.schedule = Schedule(self.yesterday, now_())
 
         if "log_path" in kwargs.keys():
             log_path = kwargs["conky_path"]
+            self.log = Log(log_path)
         else:
-            log_path = "docket.log"
+            self.log = Log()
 
-        self.yesterday = (today_() + 1) % 7
-        self.schedule = Schedule(self.yesterday, now_(), schedule_path)
-
-        self.conky = Conky(conky_path)
         if not self.conky.settings["logging"] == "true":
-            log.disable_file_logging()
+            self.log.disable_file_logging()
 
         try:
             self.refresh = float(self.conky.settings["refresh"])
         except:
             self.refresh = 5
 
-        log.info("Refresh period set to {}s".format(self.refresh))
+        self.log.info("Refresh period set to {}s".format(self.refresh))
 
     def start(self):
         try:
@@ -52,11 +50,11 @@ class Docket:
                 while (len(self.schedule.time_bounds) > 0 and
                         now_() > self.schedule.time_bounds[0]):
                     crossed = self.schedule.time_bounds.pop(0)
-                    log.info("Crossed time bound: " + crossed)
+                    self.log.info("Crossed time bound: " + crossed)
                     has_crossed_time_bound = True
 
                 if has_crossed_time_bound:
-                    log.debug("Updating conky config...")
+                    self.log.debug("Updating conky config...")
                     self.schedule.update_status(now_())
                     self.conky.update_config(self.schedule.day)
 

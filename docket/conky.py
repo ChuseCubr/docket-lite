@@ -6,7 +6,7 @@ import logging
 log= logging.getLogger("docket")
 
 class Conky:
-    def __init__(self, path):
+    def __init__(self, path = "conky-docket.conf"):
         self.path = path
         self.lines = []
         self.settings = {

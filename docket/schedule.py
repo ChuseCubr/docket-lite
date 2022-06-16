@@ -23,7 +23,7 @@ class Subject:
 
 
 class Schedule:
-    def __init__(self, today, now, path):
+    def __init__(self, today, now, path = "schedule.csv"):
         self.time_bounds = []
         self.week = []
         self.day = []
