@@ -87,9 +87,10 @@ class Schedule:
         log.debug("Converting schedule to object...")
         for raw_row in raw_sched:
             row = []
-            for col in range(1, len(raw_row)):
+            for i, item in enumerate(raw_row):
+                if i == 1: continue
                 [start, end] = raw_row[0].split("-")
-                row += [Subject(raw_row[col], start, end, now)]
+                row += [Subject(item, start, end, now)]
                 self.time_bounds += start, end
             self.week += [row]
 
