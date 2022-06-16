@@ -127,14 +127,20 @@ class Conky:
                 for _ in range(vertical_spacing):
                     self.text += ["\n"]
 
+            if self.settings["right_align"]:
+                self.text += ["${alignr}"]
             self.text += ["${{color {}}}".format(subj.status + "_color")]
             self.text += ["${{font {}}}" .format(subj.status + "_font")]
             self.text += ["{}\n"    .format(subj.name)]
+            if self.settings["right_align"]:
+                self.text += ["${alignr}"]
             self.text += ["${voffset time_voffset}"]
             self.text += ["${offset time_offset}"]
             self.text += ["${color time_color}"]
             self.text += ["${font time_font}"]
-            self.text += ["{}-{}\n".format(subj.start, subj.end)]
+            self.text += ["{}-{}".format(subj.start, subj.end)]
+            if self.settings["vertical_layout"]:
+                self.text += ["\n"]
 
             first_run = False
 
