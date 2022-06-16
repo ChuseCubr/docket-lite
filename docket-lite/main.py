@@ -2,19 +2,25 @@
 
 from time import sleep
 
-from extras import log, now_, today_
+from extras import Log, now_, today_
 from schedule import Schedule
 from conky import Conky
 
 def start():
+    log = Log()
     try:
         yesterday = (today_() + 1) % 7
         schedule = Schedule(yesterday, now_())
         conky = Conky()
+        if not conky.settings["logging"] == "true":
+            log.disable_file_logging()
+
         try:
             refresh = float(conky.settings["refresh"])
         except:
             refresh = 5
+
+        log.info("Refresh period set to {}s".format(refresh))
 
         while True:
             has_crossed_time_bound = False
@@ -27,19 +33,21 @@ def start():
             while (len(schedule.time_bounds) > 0 and
                     now_() > schedule.time_bounds[0]):
                 crossed = schedule.time_bounds.pop(0)
-                log("Crossed time bound: " + crossed)
+                log.info("Crossed time bound: " + crossed)
                 has_crossed_time_bound = True
 
             if has_crossed_time_bound:
-                log("Updating conky config...")
+                log.debug("Updating conky config...")
                 schedule.update_status(now_())
                 conky.update_config(schedule.day)
-                log("Refresh period set to {}s".format(refresh))
 
             sleep(refresh)
 
     except KeyboardInterrupt:
-        print("\ndocket: Interrupted. Goodbye!")
+        print("\ndocket: Received KeyboardInterrupt. Goodbye!")
+
+    except Exception:
+        log.error("An error occurred")
 
 if __name__ == "__main__":
     start()

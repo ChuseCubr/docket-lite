@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
-from extras import log
+import logging
+from extras import Log
+
+log = logging.getLogger("docket")
 
 class Subject:
     def __init__(self, name, start, end, now):
@@ -30,13 +33,13 @@ class Schedule:
         self.update_day(today)
 
     def update_day(self, today):
-        log("Updating today's schedule...")
+        log.debug("Updating today's schedule...")
         # get today's subjects
         self.day = []
         for row in self.week:
             self.day += [row[today]]
 
-        log("Compressing today's schedule...")
+        log.debug("Compressing today's schedule...")
         # remove blanks
         col = 0
         while col < len(self.day):
@@ -56,22 +59,27 @@ class Schedule:
                 col += 1
 
     def update_status(self, now):
-        log("Updating subject statuses...")
+        log.debug("Updating subject statuses...")
         for subj in self.day:
             subj.update_status(now)
 
     def _parse_csv(self):
         raw_sched = []
-        with open("schedule.csv") as reader:
-            log("Opening and reading schedule spreadsheet...")
-            lines = reader.readlines()
-            for line in lines:
-                raw_sched += [line.replace("\n", "").split(",")]
-        raw_sched.pop(0)
+        try:
+            with open("schedule.csv") as reader:
+                log.debug("Reading schedule spreadsheet...")
+                lines = reader.readlines()
+                for line in lines:
+                    raw_sched += [line.replace("\n", "").split(",")]
+                raw_sched.pop(0)
+
+        except Exception as e:
+            log.error("Error while attempting to read schedule spreadsheet (./schedule.csv)")
+
         return raw_sched
 
     def _init_week(self, raw_sched, now):
-        log("Converting schedule to object...")
+        log.debug("Converting schedule to object...")
         # convert raw sched table to table of objects
         for raw_row in raw_sched:
             row = []
@@ -81,7 +89,7 @@ class Schedule:
                 self.time_bounds += start, end
             self.week += [row]
 
-        log("Gathering time bounds...")
+        log.debug("Gathering time bounds...")
         # quick and dirty unique filtering for time bounds
         filter = dict()
         for key in self.time_bounds:
