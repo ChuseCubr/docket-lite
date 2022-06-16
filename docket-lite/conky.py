@@ -12,8 +12,7 @@ class Conky:
 
         self.settings = {
                 "refresh": 5,
-                "time_offset": 10,
-                "time_voffset": -10,
+                "log" : False
                 }
         self.parse_settings()
 
@@ -27,7 +26,7 @@ class Conky:
         # look for settings variables
         for line in self.lines:
             # if past settings
-            if line == "conky.config=[[\n":
+            if line == "docket_styles = {\n":
                 break
 
             # if all settings set
@@ -83,9 +82,7 @@ class Conky:
                     color = subj.status + "_color",
                     font = subj.status + "_font",
                     name = subj.name)]
-            self.text += ["${{voffset {voffset}}}${{offset {offset}}}${{color time_color}}${{font time_font}}{start}-{end}\n".format(
-                    voffset = self.settings["time_voffset"],
-                    offset = self.settings["time_offset"],
+            self.text += ["${{voffset time_voffset}}${{offset time_offset}}${{color time_color}}${{font time_font}}{start}-{end}\n".format(
                     start = subj.start,
                     end = subj.end)]
             first_run = False
@@ -107,32 +104,13 @@ class Conky:
         # append new excess
         for item in self.text:
             self.lines += [item]
-        self.lines += ["]]"]
-        self.lines += self._substite_string()
-        self.lines += ["\nprint(conky.text)"]
+        self.lines += ["]]\n\n",
+                "conky.text = insert_styles(conky.text, docket_styles)"]
         
         with open("conky-docket.conf", "w") as writer:
             writer.writelines(self.lines)
 
         log("conky config updated")
-
-    def _substite_string(self):
-        string = []
-        settings = [
-                "upcoming_color",
-                "ongoing_color",
-                "completed_color",
-                "upcoming_font",
-                "ongoing_font",
-                "completed_font",
-                "time_color",
-                "time_font"
-                ]
-
-        for setting in settings:
-            string += ["\nconky.text = conky.text:gsub(\"{setting}\", {setting})".format(setting = setting)]
-
-        return string
 
 if __name__ == "__main__":
     conky = Conky()
