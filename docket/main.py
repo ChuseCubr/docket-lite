@@ -8,6 +8,7 @@ from docket.conky import Conky
 
 class Docket:
     def __init__(self, **kwargs):
+        # moved into its own method for readability
         self._handle_kwargs(kwargs)
 
         try:

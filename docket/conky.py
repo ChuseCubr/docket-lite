@@ -17,8 +17,6 @@ class Conky:
         self._read_config()
         self._parse_settings()
 
-        self.text = []
-
     def update_config(self, sched):
         log.debug("Updating conky config...")
         self._create_text(sched)
@@ -98,6 +96,7 @@ class Conky:
     # content generation
     def _create_text(self, sched):
         log.debug("Generating conky.text...")
+        self.text = []
 
         # conky.text format:
         # ${colorN}${font name:size=size}Subj.name

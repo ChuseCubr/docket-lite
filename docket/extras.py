@@ -9,21 +9,11 @@ class Log:
         self.logger.setLevel(logging.DEBUG)
 
         # console logging always on
-        ch = logging.StreamHandler()
-        ch.setLevel(logging.INFO)
-
-        ch_formatter = logging.Formatter('%(name)s: %(levelname)s: %(message)s')
-        ch.setFormatter(ch_formatter)
-        self.logger.addHandler(ch)
+        self._create_console_handler()
 
         # file logging toggleable
         if log_to_file:
-            self.fh = logging.FileHandler(path)
-            self.fh.setLevel(logging.DEBUG)
-
-            fh_formatter = logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s')
-            self.fh.setFormatter(fh_formatter)
-            self.logger.addHandler(self.fh)
+            self._create_file_handler(path)
 
     # wrappers
     def info(self, text):
@@ -34,6 +24,28 @@ class Log:
 
     def error(self, text):
         self.logger.exception(text)
+
+
+
+    def _create_console_handler(self):
+        # create handler
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.INFO)
+
+        # format handler
+        ch_formatter = logging.Formatter('%(name)s: %(levelname)s: %(message)s')
+        ch.setFormatter(ch_formatter)
+        self.logger.addHandler(ch)
+
+    def _create_file_handler(self, path):
+        # create handler
+        self.fh = logging.FileHandler(path)
+        self.fh.setLevel(logging.DEBUG)
+
+        # format handler
+        fh_formatter = logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s')
+        self.fh.setFormatter(fh_formatter)
+        self.logger.addHandler(self.fh)
 
 def now_():
     return datetime.today().strftime("%H:%M")
