@@ -23,12 +23,12 @@ class Subject:
 
 
 class Schedule:
-    def __init__(self, today, now):
+    def __init__(self, today, now, path):
         self.time_bounds = []
         self.week = []
         self.day = []
 
-        raw_sched = self._parse_csv()
+        raw_sched = self._parse_csv(path)
         self._init_week(raw_sched, now)
         self.update_day(today)
 
@@ -66,18 +66,18 @@ class Schedule:
 
     ## private methods
     # file handling
-    def _parse_csv(self):
+    def _parse_csv(self, path):
         log.debug("Reading schedule spreadsheet...")
         raw_sched = []
         try:
-            with open("schedulef.csv") as reader:
+            with open(path) as reader:
                 lines = reader.readlines()
                 for line in lines:
                     raw_sched += [line.replace("\n", "").split(",")]
                 raw_sched.pop(0)
 
         except:
-            log.error("Error while attempting to read schedule spreadsheet (./schedule.csv)")
+            log.error("Error while attempting to read schedule spreadsheet ({})".format(path))
             raise
 
         return raw_sched

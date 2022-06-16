@@ -6,7 +6,8 @@ import logging
 log= logging.getLogger("docket")
 
 class Conky:
-    def __init__(self):
+    def __init__(self, path):
+        self.path = path
         self.lines = []
         self.settings = {
                 "refresh": 5,
@@ -30,7 +31,7 @@ class Conky:
     def _read_config(self):
         log.debug("Reading conky config...")
         try:
-            with open("conky-docket.conf") as reader:
+            with open(self.path) as reader:
                 self.lines = []
                 for line in reader:
                     # ignore everything after conky.text line
@@ -39,7 +40,7 @@ class Conky:
                     self.lines += [line]
 
         except:
-            log.error("Error occurred while attempting to read conky config (./conky-docket.conf)")
+            log.error("Error occurred while attempting to read conky config ({})".format(self.path))
             raise
 
     def _write_config(self):
@@ -48,7 +49,7 @@ class Conky:
 
         log.debug("Writing to conky config...")
         try:
-            with open("conky-docket.conf", "w") as writer:
+            with open(self.path, "w") as writer:
                 writer.writelines(self.lines)
 
             log.info("conky config updated")
@@ -118,7 +119,7 @@ class Conky:
             self.text += ["${{offset time_offset}}"]
             self.text += ["${{color time_color}}"]
             self.text += ["${{font time_font}}"]
-            self.text += ["{start}-{end}\n".format(subj.start, subj.end)]
+            self.text += ["{}-{}\n".format(subj.start, subj.end)]
 
             first_run = False
 

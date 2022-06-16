@@ -6,22 +6,30 @@ from extras import Log, now_, today_
 from schedule import Schedule
 from conky import Conky
 
-def start():
-    log = Log()
+log = Log()
+
+def start(
+        conky_path = "conky-docket.conf",
+        schedule_path = "schedule.csv"):
+
+    yesterday = (today_() + 1) % 7
+    schedule = Schedule(yesterday, now_(), schedule_path)
+
+    conky = Conky(conky_path)
+    if not conky.settings["logging"] == "true":
+        log.disable_file_logging()
+
     try:
-        yesterday = (today_() + 1) % 7
-        schedule = Schedule(yesterday, now_())
-        conky = Conky()
-        if not conky.settings["logging"] == "true":
-            log.disable_file_logging()
+        refresh = float(conky.settings["refresh"])
+    except:
+        refresh = 5
 
-        try:
-            refresh = float(conky.settings["refresh"])
-        except:
-            refresh = 5
+    log.info("Refresh period set to {}s".format(refresh))
 
-        log.info("Refresh period set to {}s".format(refresh))
+    server(conky, schedule, yesterday, refresh)
 
+def server(conky, schedule, yesterday, refresh):
+    try:
         while True:
             has_crossed_time_bound = False
             today = today_()
