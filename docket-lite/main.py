@@ -46,10 +46,6 @@ def start():
     except KeyboardInterrupt:
         print("\ndocket: Received KeyboardInterrupt. Goodbye!")
 
-    except:
-        log.error("An error occurred")
-        raise
-
 if __name__ == "__main__":
     start()
     pass
