@@ -20,6 +20,7 @@ class Conky:
         self.text = []
 
     def update_config(self, sched):
+        log.debug("Updating conky config...")
         self._create_text(sched)
         self._write_config()
         pass
@@ -44,13 +45,11 @@ class Conky:
             raise
 
     def _write_config(self):
-        # append new conky.text
-        self.lines += self.text
-
         log.debug("Writing to conky config...")
         try:
             with open(self.path, "w") as writer:
                 writer.writelines(self.lines)
+                writer.writelines(self.text)
 
             log.info("conky config updated")
         except:
