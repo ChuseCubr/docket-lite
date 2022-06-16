@@ -119,11 +119,11 @@ class Conky:
 
             self.text += ["${{color {}}}".format(subj.status + "_color")]
             self.text += ["${{font {}}}" .format(subj.status + "_font")]
-            self.text += ["${{{}}}\n"    .format(subj.name)]
-            self.text += ["${{voffset time_voffset}}"]
-            self.text += ["${{offset time_offset}}"]
-            self.text += ["${{color time_color}}"]
-            self.text += ["${{font time_font}}"]
+            self.text += ["{}\n"    .format(subj.name)]
+            self.text += ["${voffset time_voffset}"]
+            self.text += ["${offset time_offset}"]
+            self.text += ["${color time_color}"]
+            self.text += ["${font time_font}"]
             self.text += ["{}-{}\n".format(subj.start, subj.end)]
 
             first_run = False
