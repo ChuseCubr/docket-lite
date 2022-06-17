@@ -74,8 +74,6 @@ iso_week = false
 ```
 The **schedule layout**:
 
-The schedule layout:
-
 ```lua
 --- conky-docket.conf
 -- stack subjects vertically
