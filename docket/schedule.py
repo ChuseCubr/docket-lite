@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 
-import logging
-log = logging.getLogger("docket")
-
 class Subject:
     def __init__(self, name, start, end, now):
         self.name  = name
@@ -23,7 +20,8 @@ class Subject:
 
 
 class Schedule:
-    def __init__(self, today, now, path = "schedule.csv"):
+    def __init__(self, logger, today, now, path = "schedule.csv"):
+        self.log = logger
         self.time_bounds = []
         self.week = []
         self.day = []
@@ -33,12 +31,17 @@ class Schedule:
         self.update_day(today)
 
     def update_day(self, today):
-        log.debug("Updating today's schedule...")
+        self.log.debug("Updating today's schedule...")
         self.day = []
-        for row in self.week:
-            self.day += [row[today]]
+        try:
+            for row in self.week:
+                self.day += [row[today]]
+        except:
+            self.log.error("Error while parsing schedule")
+            self.log.error("Please make sure there are enough columns (try adding an extra comma in each row)")
+            raise
 
-        log.debug("Compressing today's schedule...")
+        self.log.debug("Compressing today's schedule...")
         # remove blanks
         col = 0
         while col < len(self.day):
@@ -58,7 +61,7 @@ class Schedule:
                 col += 1
 
     def update_status(self, now):
-        log.debug("Updating subject statuses...")
+        self.log.debug("Updating subject statuses...")
         for subj in self.day:
             subj.update_status(now)
 
@@ -67,7 +70,7 @@ class Schedule:
     ## private methods
     # file handling
     def _parse_csv(self, path):
-        log.debug("Reading schedule spreadsheet...")
+        self.log.debug("Reading schedule spreadsheet...")
         raw_sched = []
         try:
             with open(path) as reader:
@@ -77,24 +80,29 @@ class Schedule:
                 raw_sched.pop(0)
 
         except:
-            log.error("Error while attempting to read schedule spreadsheet ({})".format(path))
+            self.log.error("Error while attempting to read schedule spreadsheet ({})".format(path))
             raise
 
         return raw_sched
 
     # data initialization
     def _init_week(self, raw_sched, now):
-        log.debug("Converting schedule to object...")
+        self.log.debug("Converting schedule to object...")
         for raw_row in raw_sched:
             row = []
             for i, item in enumerate(raw_row):
                 if i == 1: continue
-                [start, end] = raw_row[0].split("-")
+                try:
+                    [start, end] = raw_row[0].split("-")
+                except:
+                    self.log.error("Error while parsing time column.")
+                    self.log.error("Please make sure it's the proper format: HH:MM-HH:MM")
+                    raise
                 row += [Subject(item, start, end, now)]
                 self.time_bounds += start, end
             self.week += [row]
 
-        log.debug("Gathering time bounds...")
+        self.log.debug("Gathering time bounds...")
         filter = dict()
         for key in self.time_bounds:
             filter[key] = 0

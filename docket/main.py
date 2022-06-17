@@ -14,7 +14,8 @@ class Docket:
         try:
             self.refresh = float(self.conky.settings["refresh"])
         except:
-            self.refresh = 5
+            self.log.parse_warning("refresh", 5.0)
+            self.refresh = 5.0
 
         self.log.info("Refresh period set to {}s".format(self.refresh))
 
@@ -63,15 +64,15 @@ class Docket:
         self.yesterday = (today_() + 1) % 7
         if "schedule_path" in kwargs.keys():
             schedule_path = kwargs["schedule_path"]
-            self.schedule = Schedule(self.yesterday, now_(), schedule_path)
+            self.schedule = Schedule(self.log, self.yesterday, now_(), schedule_path)
         else:
-            self.schedule = Schedule(self.yesterday, now_())
+            self.schedule = Schedule(self.log, self.yesterday, now_())
 
         if "conky_path" in kwargs.keys():
             conky_path = kwargs["conky_path"]
-            self.conky = Conky(conky_path)
+            self.conky = Conky(self.log, conky_path)
         else:
-            self.conky = Conky()
+            self.conky = Conky(self.log)
 
 if __name__ == "__main__":
     docket = Docket()

@@ -2,11 +2,9 @@
 
 import re
 
-import logging
-log= logging.getLogger("docket")
-
 class Conky:
-    def __init__(self, path = "conky-docket.conf"):
+    def __init__(self, logger, path = "conky-docket.conf"):
+        self.log = logger
         self.path = path
         self.config = []
         self.settings = {
@@ -21,7 +19,7 @@ class Conky:
         self._parse_settings()
 
     def update_config(self, sched):
-        log.debug("Updating conky config...")
+        self.log.debug("Updating conky config...")
         self._create_text(sched)
         self._write_config()
         pass
@@ -31,7 +29,7 @@ class Conky:
     ## private methods
     # file handling
     def _read_config(self):
-        log.debug("Reading conky config...")
+        self.log.debug("Reading conky config...")
         try:
             with open(self.path) as reader:
                 self.config = []
@@ -42,19 +40,19 @@ class Conky:
                     self.config += [line]
 
         except:
-            log.error("Error occurred while attempting to read conky config ({})".format(self.path))
+            self.log.error("Error occurred while attempting to read conky config ({})".format(self.path))
             raise
 
     def _write_config(self):
-        log.debug("Writing to conky config...")
+        self.log.debug("Writing to conky config...")
         try:
             with open(self.path, "w") as writer:
                 writer.writelines(self.config)
                 writer.write(self.text)
 
-            log.info("conky config updated")
+            self.log.info("conky config updated")
         except:
-            log.error("An error occurred while attempting to write conky config.")
+            self.log.error("An error occurred while attempting to write conky config.")
             raise
 
     # file parsing
@@ -64,7 +62,7 @@ class Conky:
                 "vertical_layout",
                 "right_align"
                 ]
-        log.debug("Parsing settings...")
+        self.log.debug("Parsing settings...")
 
         # look for settings variables
         for line in self.config:
@@ -99,13 +97,13 @@ class Conky:
             return False
 
         group = temp.group(1).strip(" '\"")
-        log.info("{}: {}".format(setting_name, group))
+        self.log.info("{}: {}".format(setting_name, group))
         self.settings[setting_name] = group
         return True
 
     # content generation
     def _create_text(self, sched):
-        log.debug("Generating conky.text...")
+        self.log.debug("Generating conky.text...")
         self.text = "conky.text = [[\n"
 
         # conky.text format:
@@ -117,6 +115,7 @@ class Conky:
             try:
                 vertical_spacing = int(self.settings["vertical_spacing"])
             except:
+                self.log.parse_warning("vertical_spacing", 2)
                 vertical_spacing = 2
 
             first_run = True
@@ -134,10 +133,14 @@ class Conky:
                 first_run = False
 
         else:
-            self.settings["right_align"] = False
+            if self.settings["right_align"] == True:
+                self.log.warning("Right align cannot be enabled in horizontal mode")
+                self.settings["right_align"] = False
+
             try:
                 horizontal_spacing = int(self.settings["horizontal_spacing"])
             except:
+                self.log.parse_warning("horizontal_spacing", 200)
                 horizontal_spacing = 200
 
             for i, subj in enumerate(sched):

@@ -22,6 +22,13 @@ class Log:
     def debug(self, text):
         self.logger.debug(text)
 
+    def warning(self, text):
+        self.logger.warning(text)
+
+    def parse_warning(self, setting_name, default):
+        self.logger.warning("Error while parsing \"{}\"".format(setting_name))
+        self.logger.warning("Setting to default value ({})".format(default))
+
     def error(self, text):
         self.logger.exception(text)
 
