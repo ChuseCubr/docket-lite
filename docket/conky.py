@@ -8,16 +8,17 @@ class Conky:
         self.path = path
         self.config = []
         self.settings = {
-                "refresh": 5,
                 "vertical_layout": "true",
                 "right_align": "false",
                 "iso_week": "false",
+                "refresh": 5,
                 "vertical_spacing": 2,
                 "horizontal_spacing": 200,
                 }
 
         self._read_config()
         self._parse_settings()
+        self._set_settings()
 
     def update_config(self, sched):
         self.log.debug("Updating conky config...")
@@ -39,7 +40,6 @@ class Conky:
                     if not re.search("^\s*conky.text\s*=\s*", line) == None:
                         break
                     self.config += [line]
-
         except:
             self.log.error("Error occurred while attempting to read conky config ({})".format(self.path))
             raise
@@ -56,14 +56,10 @@ class Conky:
             self.log.error("An error occurred while attempting to write conky config.")
             raise
 
-    # file parsing
+    ## settings processing
+    # loop through config lines
     def _parse_settings(self):
         settings = list(self.settings.keys())
-        booleans = [
-                "vertical_layout",
-                "right_align",
-                "iso_week",
-                ]
         self.log.debug("Parsing settings...")
 
         # look for settings variables
@@ -85,9 +81,7 @@ class Conky:
                 else:
                     i += 1
 
-        for setting in booleans:
-            self.settings[setting] = self.settings[setting] == "true"
-
+    # parse each line for settings text
     def _parse_setting(self, line, setting_name):
         # capture content
         regex_pattern = "\s*{}\s*=\s*(.+)\n"
@@ -103,27 +97,44 @@ class Conky:
         self.settings[setting_name] = group
         return True
 
+    # convert settings text to actual types
+    def _set_settings(self):
+        booleans = [
+                "vertical_layout",
+                "right_align",
+                "iso_week",
+                ]
+        for setting in booleans:
+            self.settings[setting] = self.settings[setting] == "true"
+
+        self._setting_to_int("vertical_spacing", 2)
+        self._setting_to_int("horizontal_spacing", 200)
+        self._setting_to_int("refresh", 5)
+
+    # fallback values for numbers
+    def _setting_to_int(self, setting_name, default):
+        try:
+            self.settings[setting_name] = int(self.settings[setting_name])
+        except:
+            self.log.parse_warning(setting_name, default)
+            self.settings[setting_name] = default
+
     # content generation
     def _create_text(self, sched):
         self.log.debug("Generating conky.text...")
         self.text = "conky.text = [[\n"
 
-        # conky.text format:
+        ## conky.text format:
         # ${color color}${font font}Subj.name
         # ${color color}${font font}Subj.start-Subj.end
         # <blank line>
 
+        # vertical layout
         if self.settings["vertical_layout"]:
-            try:
-                vertical_spacing = int(self.settings["vertical_spacing"])
-            except:
-                self.log.parse_warning("vertical_spacing", 2)
-                vertical_spacing = 2
-
             first_run = True
             for subj in sched:
                 if not first_run:
-                    for _ in range(vertical_spacing):
+                    for _ in range(self.settings["vertical_spacing"]):
                         self.text += "\n"
                 
                 self._create_subject_text(subj)
@@ -134,31 +145,27 @@ class Conky:
 
                 first_run = False
 
+        # horizontal layout
         else:
             if self.settings["right_align"] == True:
                 self.log.warning("Right align cannot be enabled in horizontal mode")
                 self.settings["right_align"] = False
 
-            try:
-                horizontal_spacing = int(self.settings["horizontal_spacing"])
-            except:
-                self.log.parse_warning("horizontal_spacing", 200)
-                horizontal_spacing = 200
-
             for i, subj in enumerate(sched):
-                self.text += "${{goto {}}}".format(i * horizontal_spacing)
+                self.text += "${{goto {}}}".format(i * self.settings["horizontal_spacing"])
                 self._create_subject_text(subj)
 
             self.text += "\n"
             self.text += "${voffset time_voffset}"
 
             for i, subj in enumerate(sched):
-                self.text += "${{goto {}}}".format(i * horizontal_spacing)
+                self.text += "${{goto {}}}".format(i * self.settings["horizontal_spacing"])
                 self._create_time_text(subj)
                 
         # make lua handle the string substitution here
         self.text += "]]\n\n-- Apply label styles\nconky.text = insert_styles(conky.text, docket_styles)"
 
+    # long, consistent text blocks that get rearranged
     def _create_subject_text(self, subj):
         if self.settings["right_align"]:
             self.text += "${alignr}"

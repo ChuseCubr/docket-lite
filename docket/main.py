@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 from time import sleep
+from datetime import datetime
 
-from docket.extras import Log, now_, today_
+from docket.extras import Log
 from docket.schedule import Schedule
 from docket.conky import Conky
 
@@ -10,38 +11,34 @@ class Docket:
     def __init__(self, **kwargs):
         # moved into its own method for readability
         self._handle_kwargs(kwargs)
-
-        try:
-            self.refresh = float(self.conky.settings["refresh"])
-        except:
-            self.log.parse_warning("refresh", 5.0)
-            self.refresh = 5.0
-
-        self.log.info("Refresh period set to {}s".format(self.refresh))
+        self.log.info("Refresh period set to {}s".format(self.conky.settings["refresh"]))
 
     def start(self):
         try:
             while True:
                 has_crossed_time_bound = False
 
-                today = today_(self.is_isoweek)
+                # update sched and config on new day
+                today = self._today()
                 if not today == self.yesterday:
-                    self.log.info("New day! Day: {}".format(today))
+                    self.log.info("New day! Today is ".format(self._weekday))
                     self.schedule.update_day(today)
                     has_crossed_time_bound =True
                 self.yesterday = today
 
+                # update config upon crossing time bound
                 while (len(self.schedule.time_bounds) > 0 and
-                        now_() > self.schedule.time_bounds[0]):
+                        self._now() > self.schedule.time_bounds[0]):
                     crossed = self.schedule.time_bounds.pop(0)
                     self.log.info("Crossed time bound: " + crossed)
                     has_crossed_time_bound = True
 
+                # update subj status and config
                 if has_crossed_time_bound:
-                    self.schedule.update_status(now_())
+                    self.schedule.update_status(self._now())
                     self.conky.update_config(self.schedule.day)
 
-                sleep(self.refresh)
+                sleep(self.conky.settings["refresh"])
 
         except KeyboardInterrupt:
             print("\ndocket: Received KeyboardInterrupt. Goodbye!")
@@ -69,12 +66,23 @@ class Docket:
 
         self.is_isoweek = self.conky.settings["iso_week"]
 
-        self.yesterday = (today_(self.is_isoweek) + 1) % 7
+        self.yesterday = (self._today() + 6) % 7
         if "schedule_path" in kwargs.keys():
             schedule_path = kwargs["schedule_path"]
-            self.schedule = Schedule(self.log, self.yesterday, now_(), schedule_path)
+            self.schedule = Schedule(self.log, self.yesterday, self._now(), schedule_path)
         else:
-            self.schedule = Schedule(self.log, self.yesterday, now_())
+            self.schedule = Schedule(self.log, self.yesterday, self._now())
+
+    def _now(self):
+        return datetime.today().strftime("%H:%M")
+
+    def _weekday(self):
+        return datetime.today().strftime("%A")
+
+    def _today(self):
+        if self.is_isoweek:
+            return datetime.today().isoweekday()
+        return datetime.today().weekday()
 
 if __name__ == "__main__":
     docket = Docket()

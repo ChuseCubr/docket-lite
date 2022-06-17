@@ -34,6 +34,8 @@ class Log:
 
 
 
+    ## private methods
+    # init
     def _create_console_handler(self):
         # create handler
         ch = logging.StreamHandler()
