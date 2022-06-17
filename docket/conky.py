@@ -8,7 +8,7 @@ log= logging.getLogger("docket")
 class Conky:
     def __init__(self, path = "conky-docket.conf"):
         self.path = path
-        self.lines = []
+        self.config = []
         self.settings = {
                 "refresh": 5,
                 "vertical_spacing": 2,
@@ -22,7 +22,7 @@ class Conky:
 
     def update_config(self, sched):
         log.debug("Updating conky config...")
-        self._create_text(sched)
+        self._create_vertical_text(sched)
         self._write_config()
         pass
 
@@ -34,12 +34,12 @@ class Conky:
         log.debug("Reading conky config...")
         try:
             with open(self.path) as reader:
-                self.lines = []
+                self.config = []
                 for line in reader:
                     # ignore everything after conky.text line
                     if not re.search("^\s*conky.text\s*=\s*", line) == None:
                         break
-                    self.lines += [line]
+                    self.config += [line]
 
         except:
             log.error("Error occurred while attempting to read conky config ({})".format(self.path))
@@ -49,8 +49,8 @@ class Conky:
         log.debug("Writing to conky config...")
         try:
             with open(self.path, "w") as writer:
-                writer.writelines(self.lines)
-                writer.writelines(self.text)
+                writer.writelines(self.config)
+                writer.write(self.text)
 
             log.info("conky config updated")
         except:
@@ -67,7 +67,7 @@ class Conky:
         log.debug("Parsing settings...")
 
         # look for settings variables
-        for line in self.lines:
+        for line in self.config:
             # if past settings
             if line == "docket_styles = {\n":
                 break
@@ -104,13 +104,13 @@ class Conky:
         return True
 
     # content generation
-    def _create_text(self, sched):
+    def _create_vertical_text(self, sched):
         log.debug("Generating conky.text...")
-        self.text = []
+        self.text = ""
 
         # conky.text format:
-        # ${colorN}${font name:size=size}Subj.name
-        # ${colorN}${font name:size=size}Subj.start-Subj.end
+        # ${color color}${font font}Subj.name
+        # ${color color}${font font}Subj.start-Subj.end
         # <blank line>
 
         try:
@@ -118,29 +118,39 @@ class Conky:
         except:
             vertical_spacing = 2
 
-        self.text = ["conky.text = [[\n"]
+        self.text = "conky.text = [[\n"
 
         # for vertical spacing between subjects
         first_run = True
         for subj in sched:
             if not first_run:
                 for _ in range(vertical_spacing):
-                    self.text += ["\n"]
-
-            if self.settings["right_align"]:
-                self.text += ["${alignr}"]
-            self.text += ["${{color {}}}".format(subj.status + "_color")]
-            self.text += ["${{font {}}}" .format(subj.status + "_font")]
-            self.text += ["{}\n"    .format(subj.name)]
-            if self.settings["right_align"]:
-                self.text += ["${alignr}"]
-            self.text += ["${voffset time_voffset}"]
-            self.text += ["${offset time_offset}"]
-            self.text += ["${color time_color}"]
-            self.text += ["${font time_font}"]
-            self.text += ["{}-{}\n".format(subj.start, subj.end)]
+                    self.text += "\n"
+            
+            self._create_subject_text(subj)
+            self.text += "\n"
+            self._create_time_text(subj)
+            self.text += "\n"
 
             first_run = False
 
         # make lua handle the string substitution here
-        self.text += ["]]\n\nconky.text = insert_styles(conky.text, docket_styles)"]
+        self.text += "]]\n\nconky.text = insert_styles(conky.text, docket_styles)"
+
+    def _create_subject_text(self, subj):
+        if self.settings["right_align"]:
+            self.text += "${alignr}"
+        self.text += "${{color {}_color}}".format(subj.status)
+        self.text += "${{font {}_font}}".format(subj.status)
+        self.text += "{}".format(subj.name)
+        pass
+    
+    def _create_time_text(self, subj):
+        if self.settings["right_align"]:
+            self.text += "${alignr}"
+        self.text += "${voffset time_voffset}"
+        self.text += "${offset time_offset}"
+        self.text += "${color time_color}"
+        self.text += "${font time_font}"
+        self.text += "{}-{}".format(subj.start, subj.end)
+        pass
