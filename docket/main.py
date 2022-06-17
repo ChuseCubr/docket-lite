@@ -3,7 +3,7 @@
 from time import sleep
 from datetime import datetime
 
-from docket.extras import Log
+from docket.log import Log
 from docket.schedule import Schedule
 from docket.conky import Conky
 
