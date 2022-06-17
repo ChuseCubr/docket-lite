@@ -125,6 +125,7 @@ docket = Docket(
 The **week counter** can be configured in the week counter config (`conky-day.conf` by default):
 
 ```lua
+--- conky-day.conf
 -- change `-11` in `${execi 60 expr $(date +%V) + -11}` to suit your needs ---↴
 conky.text = [[
 ${alignr}${color}${font Fira Sans:size=40}Week ${execi 60 expr $(date +%V) + -11}
