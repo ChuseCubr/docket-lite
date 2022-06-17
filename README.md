@@ -12,6 +12,7 @@ It's a less powerful version of [my Rainmeter skin](https://github.com/ChuseCubr
 * [Installation](#installation)
 * [Usage](#usage)
 * [Configuration](#configuration)
+* [License](#license)
 
 ## Dependencies
 
