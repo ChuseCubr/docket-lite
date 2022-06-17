@@ -37,7 +37,7 @@ class Conky:
                 self.config = []
                 for line in reader:
                     # ignore everything after conky.text line
-                    if not re.search("^\s*conky.text\s*=\s*", line) == None:
+                    if not re.search("^\s*conky.text\s*=", line) == None:
                         break
                     self.config += [line]
         except:
@@ -115,6 +115,9 @@ class Conky:
     def _setting_to_int(self, setting_name, default):
         try:
             self.settings[setting_name] = int(self.settings[setting_name])
+            if self.settings[setting_name] < 1:
+                self.log.parse_warning(setting_name, default)
+                self.settings[setting_name] = default
         except:
             self.log.parse_warning(setting_name, default)
             self.settings[setting_name] = default

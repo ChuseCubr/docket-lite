@@ -73,6 +73,7 @@ class Docket:
         else:
             self.schedule = Schedule(self.log, self.yesterday, self._now())
 
+    # macros / wrappers? Idk what these are called, I don't like typing
     def _now(self):
         return datetime.today().strftime("%H:%M")
 
