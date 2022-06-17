@@ -4,6 +4,8 @@ Docket-lite is a Python script that makes a dynamic schedule for [Conky](https:/
 
 It's a less powerful version of [my Rainmeter skin](https://github.com/ChuseCubr/RM-Docket).
 
+![docket-lite_demo](https://user-images.githubusercontent.com/27886422/174356472-b530268c-7ece-4e40-b61c-485f04625c2a.gif)
+
 ## Table of Contents
 
 * [Dependencies](#dependencies)
