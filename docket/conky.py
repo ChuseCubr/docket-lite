@@ -9,10 +9,11 @@ class Conky:
         self.config = []
         self.settings = {
                 "refresh": 5,
+                "vertical_layout": "true",
+                "right_align": "false",
+                "iso_week": "false",
                 "vertical_spacing": 2,
                 "horizontal_spacing": 200,
-                "vertical_layout": "true",
-                "right_align": "false"
                 }
 
         self._read_config()
@@ -60,7 +61,8 @@ class Conky:
         settings = list(self.settings.keys())
         booleans = [
                 "vertical_layout",
-                "right_align"
+                "right_align",
+                "iso_week",
                 ]
         self.log.debug("Parsing settings...")
 

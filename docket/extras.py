@@ -57,5 +57,7 @@ class Log:
 def now_():
     return datetime.today().strftime("%H:%M")
 
-def today_():
-    return datetime.today().isoweekday()
+def today_(is_isoweek):
+    if is_isoweek:
+        return datetime.today().isoweekday()
+    return datetime.today().weekday()

@@ -24,9 +24,9 @@ class Docket:
             while True:
                 has_crossed_time_bound = False
 
-                today = today_()
+                today = today_(self.is_isoweek)
                 if not today == self.yesterday:
-                    self.log.info("New day! Day: {} (iso)".format(today))
+                    self.log.info("New day! Day: {}".format(today))
                     self.schedule.update_day(today)
                     has_crossed_time_bound =True
                 self.yesterday = today
@@ -61,18 +61,20 @@ class Docket:
         else:
             self.log = Log()
 
-        self.yesterday = (today_() + 1) % 7
-        if "schedule_path" in kwargs.keys():
-            schedule_path = kwargs["schedule_path"]
-            self.schedule = Schedule(self.log, self.yesterday, now_(), schedule_path)
-        else:
-            self.schedule = Schedule(self.log, self.yesterday, now_())
-
         if "conky_path" in kwargs.keys():
             conky_path = kwargs["conky_path"]
             self.conky = Conky(self.log, conky_path)
         else:
             self.conky = Conky(self.log)
+
+        self.is_isoweek = self.conky.settings["iso_week"]
+
+        self.yesterday = (today_(self.is_isoweek) + 1) % 7
+        if "schedule_path" in kwargs.keys():
+            schedule_path = kwargs["schedule_path"]
+            self.schedule = Schedule(self.log, self.yesterday, now_(), schedule_path)
+        else:
+            self.schedule = Schedule(self.log, self.yesterday, now_())
 
 if __name__ == "__main__":
     docket = Docket()
