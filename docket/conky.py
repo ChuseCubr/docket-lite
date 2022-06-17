@@ -12,7 +12,7 @@ class Conky:
         self.settings = {
                 "refresh": 5,
                 "vertical_spacing": 2,
-                "horizontal_spacing": 50,
+                "horizontal_spacing": 200,
                 "vertical_layout": "true",
                 "right_align": "false"
                 }
@@ -22,7 +22,7 @@ class Conky:
 
     def update_config(self, sched):
         log.debug("Updating conky config...")
-        self._create_vertical_text(sched)
+        self._create_text(sched)
         self._write_config()
         pass
 
@@ -104,38 +104,55 @@ class Conky:
         return True
 
     # content generation
-    def _create_vertical_text(self, sched):
+    def _create_text(self, sched):
         log.debug("Generating conky.text...")
-        self.text = ""
+        self.text = "conky.text = [[\n"
 
         # conky.text format:
         # ${color color}${font font}Subj.name
         # ${color color}${font font}Subj.start-Subj.end
         # <blank line>
 
-        try:
-            vertical_spacing = int(self.settings["vertical_spacing"])
-        except:
-            vertical_spacing = 2
+        if self.settings["vertical_layout"]:
+            try:
+                vertical_spacing = int(self.settings["vertical_spacing"])
+            except:
+                vertical_spacing = 2
 
-        self.text = "conky.text = [[\n"
+            first_run = True
+            for subj in sched:
+                if not first_run:
+                    for _ in range(vertical_spacing):
+                        self.text += "\n"
+                
+                self._create_subject_text(subj)
+                self.text += "\n"
+                self.text += "${voffset time_voffset}"
+                self._create_time_text(subj)
+                self.text += "\n"
 
-        # for vertical spacing between subjects
-        first_run = True
-        for subj in sched:
-            if not first_run:
-                for _ in range(vertical_spacing):
-                    self.text += "\n"
-            
-            self._create_subject_text(subj)
+                first_run = False
+
+        else:
+            self.settings["right_align"] = False
+            try:
+                horizontal_spacing = int(self.settings["horizontal_spacing"])
+            except:
+                horizontal_spacing = 200
+
+            for i, subj in enumerate(sched):
+                self.text += "${{goto {}}}".format(i * horizontal_spacing)
+                self._create_subject_text(subj)
+
             self.text += "\n"
-            self._create_time_text(subj)
-            self.text += "\n"
+            self.text += "${voffset time_voffset}"
 
-            first_run = False
-
+            for i, subj in enumerate(sched):
+                self.text += "${{goto {}}}".format(i * horizontal_spacing)
+                self._create_time_text(subj)
+                
         # make lua handle the string substitution here
-        self.text += "]]\n\nconky.text = insert_styles(conky.text, docket_styles)"
+        self.text += "]]\n\n-- Apply label styles\nconky.text = insert_styles(conky.text, docket_styles)"
 
     def _create_subject_text(self, subj):
         if self.settings["right_align"]:
@@ -146,10 +163,9 @@ class Conky:
         pass
     
     def _create_time_text(self, subj):
+        self.text += "${offset time_offset}"
         if self.settings["right_align"]:
             self.text += "${alignr}"
-        self.text += "${voffset time_voffset}"
-        self.text += "${offset time_offset}"
         self.text += "${color time_color}"
         self.text += "${font time_font}"
         self.text += "{}-{}".format(subj.start, subj.end)
