@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-path_to_docket="$HOME/Projects/Docket-lite"
+# Change this to your install path
+path_to_docket="$HOME/Docket-lite"
 cd $path_to_docket
 x-terminal-emulator -e "python3 $path_to_docket/start.py" &
 sleep 1
