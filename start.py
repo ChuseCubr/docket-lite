@@ -3,13 +3,11 @@
 from docket.main import Docket
 
 ## Paths for each involved file can be set through kwargs
-# conky_path = "conky-docket.conf"
-# schedule_path = "schedule.csv"
-# log_path = "docket.log"
 # docket = Docket(
-#         conky_path = conky_path,
-#         schedule_path = schedule_path,
-#         log_path = log_path)
+#         conky_path = "conky-docket.conf",
+#         schedule_path = "schedule.csv",
+#         log_to_file = True,
+#         log_path = "docket.log")
 
 docket = Docket()
 docket.start()
