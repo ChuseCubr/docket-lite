@@ -4,12 +4,21 @@ Docket-lite is a Python script that makes a dynamic schedule for [Conky](https:/
 
 It's a less powerful version of [my Rainmeter skin](https://github.com/ChuseCubr/RM-Docket).
 
+Here's a demo of the vertical layout:
+
+![vertical_demo](https://user-images.githubusercontent.com/27886422/174424781-8b480dc9-7910-4dcb-9e37-fe7e779602d9.gif)
+
+Here's a demo of the horizontal layout:
+
+![horizontal_demo](https://user-images.githubusercontent.com/27886422/174424790-ac5fe546-944b-4f55-995f-4e8a258bcc39.gif)
+
 ## Table of Contents
 
 * [Dependencies](#dependencies)
 * [Installation](#installation)
 * [Usage](#usage)
 * [Configuration](#configuration)
+* [License](#license)
 
 ## Dependencies
 
@@ -71,8 +80,6 @@ iso_week = false
 ```
 The **schedule layout**:
 
-The schedule layout:
-
 ```lua
 --- conky-docket.conf
 -- stack subjects vertically
@@ -124,6 +131,7 @@ docket = Docket(
 The **week counter** can be configured in the week counter config (`conky-day.conf` by default):
 
 ```lua
+--- conky-day.conf
 -- change `-11` in `${execi 60 expr $(date +%V) + -11}` to suit your needs ---↴
 conky.text = [[
 ${alignr}${color}${font Fira Sans:size=40}Week ${execi 60 expr $(date +%V) + -11}
