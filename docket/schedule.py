@@ -91,7 +91,7 @@ class Schedule:
         for raw_row in raw_sched:
             row = []
             for i, item in enumerate(raw_row):
-                if i == 1: continue
+                if i == 0: continue
                 try:
                     [start, end] = raw_row[0].split("-")
                 except:
